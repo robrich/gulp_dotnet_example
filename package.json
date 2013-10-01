@@ -9,6 +9,8 @@
   "author": "",
   "devDependencies": {
     "gulp": "~0.2.0",
-    "q": "~0.9.7"
+    "q": "~0.9.7",
+    "clone": "~0.1.10",
+    "event-stream": "~3.0.16"
   }
 }

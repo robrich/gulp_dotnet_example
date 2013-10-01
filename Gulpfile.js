@@ -5,12 +5,13 @@
 var gulp = require('gulp');
 var exec = require('child_process').exec;
 var Q = require('q');
+var setVersion = require('./gulpLib/setVersionTask');
 
 
 var gitHash;
 
 gulp.task('clean', function(){
-	console.log('clean');
+	//console.log('clean');
 	var deferred = Q.defer();
 	// TODO: remove echo once we're done debugging !!!!!
 	exec('echo git reset --hard', function (error, stdout, stderr) {
@@ -23,6 +24,9 @@ gulp.task('clean', function(){
 			return;
 		}
 		if (stdout) {
+			stdout = stdout.replace(/[\r\n]+/g,'');
+		}
+		if (stdout) {
 			console.log(stdout);
 		}
 		deferred.resolve();
@@ -30,7 +34,7 @@ gulp.task('clean', function(){
 	return deferred.promise;
 });
 
-gulp.task('version', ['getVersion'], function(){
+gulp.task('version', ['getVersion','setVersion'], function(){
 	console.log('version');
 });
 
@@ -63,10 +67,17 @@ gulp.task('getVersion', function () {
 			return;
 		}
 		gitHash = stdout.replace(/[\r\n]+/g,'');
-		console.log('gitHash: [' + gitHash + ']');
+		console.log("gitHash: '" + gitHash + "'");
 		deferred.resolve(gitHash);
 	});
 	return deferred.promise;
+});
+
+gulp.task('setVersion', function () {
+	console.log('setVersion');
+	gulp.src("./**/*AssemblyInfo.cs")
+		.pipe(setVersion(gitHash))
+		.pipe(gulp.dest("./dist"));
 });
 
 
