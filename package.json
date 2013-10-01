@@ -1,0 +1,13 @@
+{
+  "name": "wsb",
+  "version": "0.0.0",
+  "description": "GoDaddy Website Builder",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "devDependencies": {
+    "gulp": "~0.2.0"
+  }
+}
