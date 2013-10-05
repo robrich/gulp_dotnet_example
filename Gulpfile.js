@@ -5,10 +5,10 @@
 var gulp = require('gulp');
 var exec = require('child_process').exec;
 var async = require('async');
+var fs = require('fs');
 var Q = require('q');
 var rimraf = require('rimraf');
 var setVersion = require('./gulpLib/setVersionTask');
-
 
 var gitHash;
 var buildNumber;
@@ -19,6 +19,7 @@ gulp.verbose = true; // show start and end for each task
 gulp.task('clean', function(){
 	var deferred = Q.defer();
 
+	// TODO: delete obj, Debug, Release
 	async.parallel([
 		function (cb) {
 			rimraf('./dist', cb);
@@ -39,7 +40,7 @@ gulp.task('clean', function(){
 					console.log(stdout);
 				}
 				if (error) {
-					cb('git errored with exit code '+error.code);
+					cb('git failed, exit code '+error.code);
 				}
 				cb(null);
 			});
@@ -47,7 +48,7 @@ gulp.task('clean', function(){
 	], function (err) {
 		if (err) {
 			throw new Error(err);
-			//deferred.reject(error);
+			//deferred.reject(err);
 		}
 		deferred.resolve();
 	});
@@ -58,7 +59,29 @@ gulp.task('clean', function(){
 gulp.task('version', ['getGitHash','getBuildNumber','setVersion'], noop);
 
 gulp.task('build', ['clean','version'], function(){
-	console.log('build');
+	var deferred = Q.defer();
+	var sln = 'GulpTarget.sln';
+	var args = [
+		'/m',
+		//'/p:OutputPath=D:\\JenkinsDrops\\WSB_All\\',
+		'/property:Configuration=Release',
+		'/verbosity:minimal',
+		'/fileLoggerParameters:LogFile=log\\GulpTarget.log',
+		'/target:Clean,Rebuild'
+	];
+
+	buildSolution(sln, args, function (err) {
+		if (err) {
+			throw new Error(err);
+			//deferred.jreject(err);
+		}
+
+// !!!!! copy web projects and test projects to dist
+
+		deferred.resolve();
+	});
+
+	return deferred.promise;
 });
 
 gulp.task('test', ['build'], function(){
@@ -96,7 +119,6 @@ gulp.task('getGitHash', function () {
 gulp.task('getBuildNumber', function () {
 	// runs synchronously, no need to wait for it
 	buildNumber = process.env.BUILD_NUMBER;
-	buildNumber = '75';
 	if (buildNumber) {
 		console.log("BUILD_NUMBER: '"+buildNumber+"'");
 	} else {
@@ -111,6 +133,34 @@ gulp.task('setVersion', ['clean', 'getGitHash', 'getBuildNumber'], function () {
 		.pipe(gulp.dest("./dist"));
 });
 
+var buildSolution = function (sln, args, cb) {
+	fs.mkdir('log', function (err) {
+		if (err) {
+			return cb(err);
+		}
+		var cmds = [
+			"C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\msbuild.exe",
+			sln.replace('/','\\')
+		].concat(args);
+		var cmd = '"'+cmds.join('" "')+'"';
+		console.log("cmd: "+cmd);
+		exec(cmd, function (error, stdout, stderr) {
+			if (stderr) {
+				console.log(stderr);
+			}
+			if (stdout) {
+				stdout = stdout.replace(/[\r\n]+/g,'');
+			}
+			if (stdout) {
+				console.log(stdout);
+			}
+			if (error) {
+				cb('msbuild failed, exit code '+error.code);
+			}
+			cb(null);
+		});
+	});
+};
 
 
 // default task gets called when you run the `gulp` command
