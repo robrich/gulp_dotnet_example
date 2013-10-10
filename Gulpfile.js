@@ -8,7 +8,9 @@ var async = require('async');
 var fs = require('fs');
 var Q = require('q');
 var rimraf = require('rimraf');
-var setVersion = require('./gulpLib/setVersionTask');
+var setVersion = require('./gulpLib/gulp-setVersion');
+var ignore = require('./gulpLib/gulp-ignore');
+var gulpRimraf = require('/gulpLib/gulp-rimraf');
 
 var solutionName = 'GulpTarget';
 var solutionFile = solutionName+'.sln';
@@ -26,14 +28,9 @@ var gitHash;
 var buildNumber;
 var noop = function () {};
 
-gulp.verbose = true; // show start and end for each task
 
-gulp.task('clean', function(){
-	var deferred = Q.defer();
 
-	// !!!!!!! TODO: delete obj, Debug, Release, Web/bin
-	// !!!!!!! Exclude packages/** and node_modules/**
-
+gulp.task('cleanUnversioned', function (cb) {
 	async.parallel([
 		function (cb) {
 			rimraf('./dist', cb);
@@ -42,47 +39,38 @@ gulp.task('clean', function(){
 			rimraf('./log', cb);
 		},
 		function (cb) {
-			// TODO: remove echo once we're done debugging !!!!!
-			exec('echo git reset --hard', function (error, stdout, stderr) {
-				if (stderr) {
-					console.log(stderr);
-				}
-				if (stdout) {
-					stdout = stdout.replace(/[\r\n]+/g,'');
-				}
-				if (stdout) {
-					console.log(stdout);
-				}
-				if (error) {
-					cb('git failed, exit code '+error.code);
-				}
-				cb(null);
-			});
+			var stream = gulp.src('{**/bin,**/obj,**/Debug,**/Release}')
+				.pipe(ignore(['node_modules','packages']))
+				.pipe(gulpRimraf());
+			stream.once('end', cb);
 		}
 	], function (err) {
 		if (err) {
 			throw new Error(err);
 			//deferred.reject(err);
 		}
-		deferred.resolve();
+		cb(null);
 	});
-
-	return deferred.promise;
 });
 
-gulp.task('version', ['getGitHash','getBuildNumber','setVersion'], noop);
-
-gulp.task('build', ['clean','version', 'buildSolution'], noop);
-
-gulp.task('test', ['build'], function(){
-	console.log('test');
+gulp.task('cleanVersioned', function (cb) {
+	// TODO: remove echo once we're done debugging !!!!!
+	exec('echo git reset --hard', function (error, stdout, stderr) {
+		if (stderr) {
+			console.log(stderr);
+		}
+		if (stdout) {
+			stdout = stdout.replace(/[\r\n]+/g,'');
+		}
+		if (stdout) {
+			console.log(stdout);
+		}
+		if (error) {
+			cb('git failed, exit code '+error.code);
+		}
+		cb(null);
+	});
 });
-
-gulp.task('deploy', ['build','test'], function(){
-	console.log('deploy');
-});
-
-
 
 gulp.task('getGitHash', function (callback) {
 	exec('git log -1 --format=%h', function (error, stdout, stderr) {
@@ -233,5 +221,25 @@ var copyProject = function (proj, projName, dest, cb) {
 };
 
 
-// default task gets called when you run the `gulp` command
+//
+// The main 5 steps: clean, version, build, test, deploy
+//
+
+gulp.verbose = true; // show start and end for each task
+
+gulp.task('clean', ['cleanVersioned', 'cleanUnversioned'], noop);
+
+gulp.task('version', ['getGitHash', 'getBuildNumber', 'setVersion'], noop);
+
+gulp.task('build', ['clean','version', 'buildSolution'], noop);
+
+gulp.task('test', ['build'], function(){
+	console.log('test');
+});
+
+gulp.task('deploy', ['build','test'], function(){
+	console.log('deploy');
+});
+
+// default task gets called when you run `gulp` with no arguments
 gulp.task('default', ['clean', 'version', 'build', 'test', 'deploy'], noop);
