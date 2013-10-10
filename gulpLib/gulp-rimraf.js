@@ -2,12 +2,13 @@
 
 "use strict";
 
-var es = require('event-stream');
-var rimraf = require('rimraf');
+var es = require('event-stream'),
+	rimraf = require('rimraf');
 
 module.exports = function(){
 	return es.map(function (file, cb){
-		console.log(file);
-		cb(null, file);
+		rimraf(file.path, function (err) {
+			cb(err, file);
+		});
 	});
 };

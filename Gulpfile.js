@@ -10,11 +10,13 @@ var Q = require('q');
 var rimraf = require('rimraf');
 var setVersion = require('./gulpLib/gulp-setVersion');
 var ignore = require('./gulpLib/gulp-ignore');
-var gulpRimraf = require('/gulpLib/gulp-rimraf');
+var gulpRimraf = require('./gulpLib/gulp-rimraf');
+var gulpExec = require('./gulpLib/gulp-exec');
 
 var solutionName = 'GulpTarget';
 var solutionFile = solutionName+'.sln';
 var platform = 'Any CPU';
+var frameworkVersion = '4.0.30319';
 var msbuildVerbosity = 'Minimal';
 var configuration = 'Release';
 
@@ -29,6 +31,9 @@ var buildNumber;
 var noop = function () {};
 
 
+//
+// clean
+//
 
 gulp.task('cleanUnversioned', function (cb) {
 	async.parallel([
@@ -60,7 +65,7 @@ gulp.task('cleanVersioned', function (cb) {
 			console.log(stderr);
 		}
 		if (stdout) {
-			stdout = stdout.replace(/[\r\n]+/g,'');
+			stdout = stdout.trim(); // Trim trailing cr-lf
 		}
 		if (stdout) {
 			console.log(stdout);
@@ -72,10 +77,17 @@ gulp.task('cleanVersioned', function (cb) {
 	});
 });
 
+//
+// version
+//
+
 gulp.task('getGitHash', function (callback) {
 	exec('git log -1 --format=%h', function (error, stdout, stderr) {
 		if (stderr) {
 			console.log(stderr);
+		}
+		if (stdout) {
+			stdout = stdout.trim(); // Trim trailing cr-lf
 		}
 		if (error) {
 			console.log('git errored with exit code '+error.code);
@@ -85,7 +97,7 @@ gulp.task('getGitHash', function (callback) {
 		if (!stdout) {
 			callback(new Error('git log retured no results'));
 		}
-		gitHash = stdout.replace(/[\r\n]+/g,'');
+		gitHash = stdout;
 		console.log("gitHash: '" + gitHash + "'");
 		callback(null, gitHash);
 	});
@@ -101,36 +113,41 @@ gulp.task('getBuildNumber', function () {
 	}
 });
 
-gulp.task('setVersion', ['clean', 'getGitHash', 'getBuildNumber'], function () {
-	// TODO: Why does this not ignore the dist directory?
-	gulp.src("./**/*AssemblyInfo.cs", {ignore: ["dist"]})
+gulp.task('setVersion', ['clean', 'getGitHash', 'getBuildNumber'], function (callback) {
+	// TODO: remove dist once we're done debugging !!!!!
+	var stream = gulp.src("./**/*AssemblyInfo.cs")
+		.pipe(ignore("./dist"))
 		.pipe(setVersion(gitHash, buildNumber))
 		.pipe(gulp.dest("./dist"));
+	stream.once('end', callback);
 });
 
-gulp.task('revertVersion', function () {
-	// TODO: Why does this not ignore the dist directory?
-	// !!!!!!!!!!!!!!!!!!!!!!
-	gulp.src("./**/*AssemblyInfo.cs", {ignore: ["dist"]})
-		.pipe(setVersion(gitHash, buildNumber))
-		.pipe(gulp.dest("./dist"));
+// Helpful for develpers who want to put it back, not directly referenced by the build
+// `gulp revertVersion` from a cmd
+gulp.task('revertVersion', function (callback) {
+	var stream = gulp.src("./**/*AssemblyInfo.cs")
+		.pipe(ignore("./dist"))
+		.pipe(gulpExec('git checkout $file'));
+	stream.once('end', callback);
 });
 
-gulp.task('buildSolution', ['clean','version'], function(){
-	var deferred = Q.defer();
+//
+// build
+//
 
+gulp.task('buildSolution', ['clean','version'], function(callback){
 	fs.mkdir('log', function (err) {
 		if (err) {
 			throw new Error(err);
 		}
+		// TODO: parameterize
 		var cmds = [
-			"C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\msbuild.exe",
+			"C:\\Windows\\Microsoft.NET\\Framework\\v"+frameworkVersion+"\\msbuild.exe",
 			solutionFile.replace('/','\\')
 		];
 		var args = [
 			'/m',
 			'/target:Clean,Rebuild',
-			//'/p:OutputPath=D:\\JenkinsDrops\\WSB_All\\',
 			'/property:Configuration='+configuration,
 			'/verbosity:'+msbuildVerbosity,
 			'/p:DefineConstants="'+debugConditional+'"',
@@ -147,7 +164,7 @@ gulp.task('buildSolution', ['clean','version'], function(){
 				console.log(stderr);
 			}
 			if (stdout) {
-				stdout = stdout.replace(/[\r\n]+/g,'');
+				stdout = stdout.trim(); // Trim trailing cr-lf
 			}
 			if (stdout) {
 				console.log(stdout);
@@ -155,11 +172,9 @@ gulp.task('buildSolution', ['clean','version'], function(){
 			if (error) {
 				throw new Error('msbuild failed, exit code '+error.code);
 			}
-			deferred.resolve();
+			callback(error);
 		});
 	});
-
-	return deferred.promise;
 });
 
 var copyProject = function (proj, projName, dest, cb) {
@@ -172,7 +187,7 @@ var copyProject = function (proj, projName, dest, cb) {
 		var destBackslash = dest.replace(/\//,'\\');
 
 		var cmds = [
-			"C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\msbuild.exe",
+			"C:\\Windows\\Microsoft.NET\\Framework\\v"+frameworkVersion+"\\msbuild.exe",
 			proj.replace('/','\\')
 		];
 		var args = [
@@ -189,13 +204,13 @@ var copyProject = function (proj, projName, dest, cb) {
 			'/fileloggerparameters:logfile=log\\'+projName+'-copyProject.msbuild.log'
 		];
 		var cmd = '"'+cmds.concat(args).join('" "')+'"';
-		console.log("buildSolution: "+cmd);
+		console.log('copyProject: projName: '+projName+', proj:'+proj+', dest: '+dest+', cmd: '+cmd);
 		exec(cmd, function (error, stdout, stderr) {
 			if (stderr) {
 				console.log(stderr);
 			}
 			if (stdout) {
-				stdout = stdout.replace(/[\r\n]+/g,'');
+				stdout = stdout.trim(); // Trim trailing cr-lf
 			}
 			if (stdout) {
 				console.log(stdout);
@@ -239,6 +254,7 @@ gulp.task('test', ['build'], function(){
 
 gulp.task('deploy', ['build','test'], function(){
 	console.log('deploy');
+			//'/p:OutputPath=D:\\JenkinsDrops\\WSB_All\\',
 });
 
 // default task gets called when you run `gulp` with no arguments
