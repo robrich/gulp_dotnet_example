@@ -5,7 +5,7 @@
 var exec = require('child_process').exec;
 var gulp = require('gulp');
 var ignore = require('./lib/gulp-ignore');
-var setVersion = require('./lib/gulp-setVersion');
+var gulpSetVersion = require('./lib/gulp-setVersion');
 var gulpExec = require('gulp-exec');
 
 
@@ -48,7 +48,7 @@ var setVersion = function (callback) {
 	// TODO: remove dist once we're done debugging !!!!!
 	var stream = gulp.src("./**/*AssemblyInfo.cs")
 		.pipe(ignore("./dist"))
-		.pipe(setVersion(gitHash, buildNumber))
+		.pipe(gulpSetVersion(gitHash, buildNumber))
 		.pipe(gulp.dest("./dist"));
 	stream.once('end', callback);
 };

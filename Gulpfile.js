@@ -23,10 +23,26 @@ var opts = {
 	debugConditional : ''
 };
 opts.solutionFile = opts.solutionName+'.sln';
+gulp.verbose = true; // show start and end for each task
 
 
 var noop = function () {};
 
+
+// default task gets called when you run `gulp` with no arguments
+gulp.task('default', ['clean', 'version', 'build', 'test', 'deploy'], noop);
+
+// The main 5 steps:
+gulp.task('clean', ['cleanVersioned', 'cleanUnversioned'], noop);
+gulp.task('version', ['getGitHash', 'getBuildNumber', 'setVersion'], noop);
+gulp.task('build', ['clean','version', 'buildSolution', 'copySolutionProjects'], noop);
+gulp.task('test', ['build'], function(){
+	console.log('test');
+});
+gulp.task('deploy', ['build','test'], function(){
+	console.log('deploy');
+	//'/p:OutputPath=D:\\JenkinsDrops\\WSB_All\\',
+});
 
 // clean
 
@@ -44,35 +60,13 @@ gulp.task('revertVersion', version.revertVersion);
 
 // build
 
-gulp.task('buildSolution', ['clean','version'], function(callback){
-	return build.buildSolution(opts, callback);
+gulp.task('setOpts', function () {
+	build.setOpts(opts);
 });
+// JSHint, csslint, minify, etc !!!!!!!!!!!
+gulp.task('buildSolution', ['clean','version', 'setOpts'], build.buildSolution);
+gulp.task('copySolutionProjects', ['buildSolution'], build.copySolutionProjects);
 
 // test
 
 // deploy
-
-
-//
-// The main 5 steps: clean, version, build, test, deploy
-//
-
-gulp.verbose = true; // show start and end for each task
-
-gulp.task('clean', ['cleanVersioned', 'cleanUnversioned'], noop);
-
-gulp.task('version', ['getGitHash', 'getBuildNumber', 'setVersion'], noop);
-
-gulp.task('build', ['clean','version', 'buildSolution'], noop);
-
-gulp.task('test', ['build'], function(){
-	console.log('test');
-});
-
-gulp.task('deploy', ['build','test'], function(){
-	console.log('deploy');
-			//'/p:OutputPath=D:\\JenkinsDrops\\WSB_All\\',
-});
-
-// default task gets called when you run `gulp` with no arguments
-gulp.task('default', ['clean', 'version', 'build', 'test', 'deploy'], noop);

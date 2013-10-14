@@ -3,16 +3,25 @@
 "use strict";
 
 var fs = require('fs');
+var path = require('path');
 var exec = require('child_process').exec;
+var fsExtra = require('fs.extra');
+var async = require('async');
 
-var buildSolution = function(opts, callback){
+var opts;
+
+var setOpts = function (o) {
+	opts = o;
+};
+
+var buildSolution = function(cb){
 	fs.mkdir('log', function (err) {
 		if (err) {
 			throw new Error(err);
 		}
 		var cmds = [
 			"C:\\Windows\\Microsoft.NET\\Framework\\v"+opts.frameworkVersion+"\\msbuild.exe",
-			opts.solutionFile.replace('/','\\')
+			path.resolve(opts.solutionFile).replace('/','\\')
 		];
 		var args = [
 			'/m',
@@ -39,41 +48,100 @@ var buildSolution = function(opts, callback){
 				console.log(stdout);
 			}
 			if (error) {
-				throw new Error('msbuild failed, exit code '+error.code);
+				console.log('msbuild failed, exit code '+error.code);
 			}
-			callback(error);
+			cb(error);
 		});
 	});
 };
 
-var copyProject = function (proj, projName, dest, cb) {
+// dest is folder
+var packageProject = function (projPath, projName, dest, cb) {
+	fs.mkdir('log', function (err) {
+		if (err) {
+			return cb(err);
+		}
+		fs.mkdir(dest, function (err) {
+			if (err) {
+				return cb(err);
+			}
+
+			// TODO: delete old /obj/*.config
+
+			var destPackage = path.join(dest, projName+'.zip');
+			var destBackslash = path.resolve(destPackage).replace(/\//,'\\');
+
+			var cmds = [
+				"C:\\Windows\\Microsoft.NET\\Framework\\v"+opts.frameworkVersion+"\\msbuild.exe",
+				path.resolve(projPath).replace('/','\\')
+			];
+			var args = [
+				'/m',
+				'/target:TransformWebConfig;Package',
+				'/p:PackageLocation='+destBackslash,
+				'/property:Configuration='+opts.configuration,
+				'/verbosity:'+opts.msbuildVerbosity,
+				'/p:DefineConstants="'+opts.debugConditional+'"',
+				'/p:debug='+opts.debug,
+				'/p:trace='+opts.debug,
+				//'/noconsolelogger',
+				'/fileLogger',
+				'/fileloggerparameters:logfile=log\\'+projName+'-copyProject.msbuild.log'
+			];
+			var cmd = '"'+cmds.concat(args).join('" "')+'"';
+			console.log('copyProject: projName: '+projName+', projPath:'+projPath+', dest: '+dest+', cmd: '+cmd);
+			exec(cmd, function (error, stdout, stderr) {
+				if (stderr) {
+					console.log(stderr);
+				}
+				if (stdout) {
+					stdout = stdout.trim(); // Trim trailing cr-lf
+				}
+				if (stdout) {
+					console.log(stdout);
+				}
+				if (error) {
+					console.log('msbuild failed, exit code '+error.code);
+					return cb(error);
+				}
+				if (!fs.existsSync(destPackage)) {
+					cb('Web Deploy package for '+projName+' not found at '+destPackage);
+				}
+				return cb(null);
+			});
+		});
+	});
+};
+
+var copyProject = function (projPath, projName, dest, cb) {
 	fs.mkdir('log', function (err) {
 		if (err) {
 			return cb(err);
 		}
 
-		// TODO: partial path to full path
-		var destBackslash = dest.replace(/\//,'\\');
+		var destBackslash = path.resolve(dest).replace(/\//,'\\');
+
+		// TODO: delete old /obj/*.config
 
 		var cmds = [
-			"C:\\Windows\\Microsoft.NET\\Framework\\v"+frameworkVersion+"\\msbuild.exe",
-			proj.replace('/','\\')
+			"C:\\Windows\\Microsoft.NET\\Framework\\v"+opts.frameworkVersion+"\\msbuild.exe",
+			path.resolve(projPath).replace('/','\\')
 		];
 		var args = [
 			'/m',
 			'/target:PipelinePreDeployCopyAllFilesToOneFolder',
 			'/p:_PackageTempDir='+destBackslash,
-			'/property:Configuration='+configuration,
-			'/verbosity:'+msbuildVerbosity,
-			'/p:DefineConstants="'+debugConditional+'"',
-			'/p:debug='+debug,
-			'/p:trace='+debug,
+			'/property:Configuration='+opts.configuration,
+			'/verbosity:'+opts.msbuildVerbosity,
+			'/p:DefineConstants="'+opts.debugConditional+'"',
+			'/p:debug='+opts.debug,
+			'/p:trace='+opts.debug,
 			//'/noconsolelogger',
 			'/fileLogger',
 			'/fileloggerparameters:logfile=log\\'+projName+'-copyProject.msbuild.log'
 		];
 		var cmd = '"'+cmds.concat(args).join('" "')+'"';
-		console.log('copyProject: projName: '+projName+', proj:'+proj+', dest: '+dest+', cmd: '+cmd);
+		console.log('copyProject: projName: '+projName+', projPath:'+projPath+', dest: '+dest+', cmd: '+cmd);
 		exec(cmd, function (error, stdout, stderr) {
 			if (stderr) {
 				console.log(stderr);
@@ -85,21 +153,38 @@ var copyProject = function (proj, projName, dest, cb) {
 				console.log(stdout);
 			}
 			if (error) {
-				throw new Error('msbuild failed, exit code '+error.code);
+				console.log('msbuild failed, exit code '+error.code);
+				return cb(error);
 			}
 
-			<copy	file="${ProjectPath}/obj/${Configuration}/TransformWebConfig/transformed/Web.config"
-			tofile="${Dest}/Web.config"
-			overwrite="true"
-			if="${file::exists(ProjectPath+'/obj/'+Configuration+'/TransformWebConfig/transformed/Web.config')}" />
-
-			<property name="DestStash" value="${Dest}" />
-				<property name="Source" value="${ProjectPath}\bin" />
-				<property name="Dest" value="${DestStash}\bin" />
-				<call target="CopyFolder" />
-				<property name="Dest" value="${DestStash}" />
-
-				deferred.resolve();
+			async.parallel([
+				function (cba) {
+					// copy bin content
+					fsExtra.copyRecursive(projPath+'/bin', dest+'/bin', function (err) {
+						cba(err);
+					});
+				},
+				function (cbb) {
+					// copy transformed web.config (if any)
+					var exists = fs.existsSync(projPath+'/obj/'+opts.configuration+'/TransformWebConfig/transformed/Web.config'); // async doesn't pass error, will sync throw it?
+					if (exists) {
+						fsExtra.copy(projPath+'/obj/'+opts.configuration+'/TransformWebConfig/transformed/Web.config', function (err) {
+							cbb(err);
+						});
+					} else {
+						// TODO: fail the build on missing transormed/Web.config?
+						cbb(null);
+					}
+				}
+			], cb);
 		});
 	});
+};
+
+module.exports = {
+	setOpts: setOpts,
+	buildSolution: buildSolution,
+	copySolutionProjects: copySolutionProjects,
+	copyProject: copyProject,
+	packageProject: packageProject
 };

@@ -11,24 +11,19 @@ var exec = require('child_process').exec;
 
 var cleanUnversioned = function (cb) {
 	async.parallel([
-		function (cb) {
-			rimraf('./dist', cb);
+		function (cba) {
+			rimraf('./dist', cba);
 		},
-		function (cb) {
-			rimraf('./log', cb);
+		function (cbb) {
+			rimraf('./log', cbb);
 		},
-		function (cb) {
+		function (cbc) {
 			var stream = gulp.src('{**/bin,**/obj,**/Debug,**/Release}')
 				.pipe(ignore(['node_modules','packages']))
 				.pipe(gulpRimraf());
-			stream.once('end', cb);
+			stream.once('end', cbc);
 		}
-	], function (err) {
-		if (err) {
-			throw new Error(err);
-		}
-		cb(null);
-	});
+	], cb);
 };
 
 var cleanVersioned = function (cb) {
