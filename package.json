@@ -21,6 +21,7 @@
     "minimatch": "~0.2.12",
     "gulp-exec": "0.0.2",
     "gulp-rimraf": "0.0.2",
-    "fs.extra": "~1.2.1"
+    "fs.extra": "~1.2.1",
+    "gulp-jshint": "0.0.1"
   }
 }

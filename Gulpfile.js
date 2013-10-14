@@ -6,21 +6,22 @@ var gulp = require('gulp');
 
 var clean = require('./gulpLib/clean');
 var version = require('./gulpLib/version');
-var build = require('./gulpLib/bulid');
+var build = require('./gulpLib/build');
 var test = require('./gulpLib/test');
 var deploy = require('./gulpLib/deploy');
 
 
 var opts = {
-	solutionName : 'GulpTarget',
-	platform : 'Any CPU',
-	frameworkVersion : '4.0.30319',
-	msbuildVerbosity : 'Minimal',
-	configuration : 'Release',
-	// Release: debug : 'false', debugConditional : '',
-	// Debug: debug : 'true', debugConditional : 'DEBUG;TRACE',
-	debug : 'false',
-	debugConditional : ''
+	solutionName: 'GulpTarget',
+	platform: 'Any CPU',
+	frameworkVersion: '4.0.30319',
+	frameworkName: 'net-4.0',
+	msbuildVerbosity: 'Minimal',
+	configuration: 'Release',
+	// Release: debug: 'false', debugConditional : '',
+	// Debug: debug: 'true', debugConditional : 'DEBUG;TRACE',
+	debug: 'false',
+	debugConditional: ''
 };
 opts.solutionFile = opts.solutionName+'.sln';
 gulp.verbose = true; // show start and end for each task
@@ -36,13 +37,8 @@ gulp.task('default', ['clean', 'version', 'build', 'test', 'deploy'], noop);
 gulp.task('clean', ['cleanVersioned', 'cleanUnversioned'], noop);
 gulp.task('version', ['getGitHash', 'getBuildNumber', 'setVersion'], noop);
 gulp.task('build', ['clean','version', 'buildSolution', 'copySolutionProjects'], noop);
-gulp.task('test', ['build'], function(){
-	console.log('test');
-});
-gulp.task('deploy', ['build','test'], function(){
-	console.log('deploy');
-	//'/p:OutputPath=D:\\JenkinsDrops\\WSB_All\\',
-});
+gulp.task('test', ['build', 'testSetOpts', 'runJSHint', 'runCssLint', 'runNUnit'], noop);
+gulp.task('deploy', ['build','test', 'deployToJenkinsDrops'], noop);
 
 // clean
 
@@ -51,8 +47,8 @@ gulp.task('cleanVersioned', clean.cleanVersioned);
 
 // version
 
-gulp.task('getGitHash', version.getGitHash);
-gulp.task('getBuildNumber', version.getBuildNumber);
+gulp.task('getGitHash', ['setOpts'], version.getGitHash);
+gulp.task('getBuildNumber', ['setOpts'], version.getBuildNumber);
 gulp.task('setVersion', ['clean', 'getGitHash', 'getBuildNumber'], version.setVersion);
 // Helpful for develpers who want to put it back, not directly referenced by the build
 // `gulp revertVersion` from a cmd
@@ -60,13 +56,25 @@ gulp.task('revertVersion', version.revertVersion);
 
 // build
 
-gulp.task('setOpts', function () {
-	build.setOpts(opts);
-});
-// JSHint, csslint, minify, etc !!!!!!!!!!!
+// from Grunt: minify, grunt-header, etc !!!!!!!!!!!
 gulp.task('buildSolution', ['clean','version', 'setOpts'], build.buildSolution);
 gulp.task('copySolutionProjects', ['buildSolution'], build.copySolutionProjects);
 
 // test
+gulp.task('testSetOpts', function () {
+});
+gulp.task('runJSHint', test.runJSHint);
+gulp.task('runCssLint', test.runCssLint);
+gulp.task('runNUnit', ['build', 'setOpts'], test.runNUnit);
 
 // deploy
+gulp.task('deployToJenkinsDrops', ['setOpts'], deploy.deployToJenkinsDrops);
+
+// generic
+
+gulp.task('setOpts', function () {
+	version.setOpts(opts);
+	build.setOpts(opts);
+	test.setOpts(opts);
+	deploy.setOpts(opts);
+});
