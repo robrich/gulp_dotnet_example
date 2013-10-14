@@ -63,8 +63,6 @@ gulp.task('buildSolution', ['clean','version', 'runCssMin', 'runUglify', 'setOpt
 gulp.task('copySolutionProjects', ['buildSolution'], build.copySolutionProjects);
 
 // test
-gulp.task('testSetOpts', function () {
-});
 gulp.task('runJSHint', test.runJSHint);
 gulp.task('runCssLint', test.runCssLint);
 gulp.task('runNUnit', ['build', 'setOpts'], test.runNUnit);

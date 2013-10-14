@@ -48,11 +48,10 @@ var getBuildNumber = function () {
 };
 
 var setVersion = function (callback) {
-	// TODO: remove dist once we're done debugging !!!!!
 	var stream = gulp.src("./**/*AssemblyInfo.cs")
 		.pipe(ignore("./dist"))
 		.pipe(gulpSetVersion(opts.gitHash, opts.buildNumber))
-		.pipe(gulp.dest("./dist"));
+		.pipe(gulp.dest("./"));
 	stream.once('end', callback);
 };
 
