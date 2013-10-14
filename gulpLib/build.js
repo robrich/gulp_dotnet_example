@@ -2,6 +2,11 @@
 
 "use strict";
 
+var gulp = require('gulp');
+var minifyCSS = require('gulp-minify-css');
+var uglify = require('gulp-uglify');
+var ignore = require('gulp-ignore');
+var header = require('gulp-header');
 var fs = require('fs');
 var path = require('path');
 var exec = require('child_process').exec;
@@ -12,6 +17,27 @@ var opts;
 
 var setOpts = function (o) {
 	opts = o;
+};
+
+
+var runCssMin = function (cb) {
+	var headerText = '/*! '+opts.copyrightHeader+'\r\nHash: '+opts.gitHash+', Build: '+opts.buildNumber+' {{now}} */';
+	var stream = gulp.src('./Web/**/*.css')
+		.pipe(ignore(['**/m/**', '**/libs/**']))
+		.pipe(minifyCSS({}))
+		.pipe(header(headerText))
+		.pipe(gulp.dest('./Web/m/'+opts.gitHash+'/'));
+	stream.once('end', cb);
+};
+
+var runUglify = function (cb) {
+	var headerText = '/*! '+opts.copyrightHeader+'\r\nHash: '+opts.gitHash+', Build: '+opts.buildNumber+' {{now}} */';
+	var stream = gulp.src('./Web/**/*.js')
+		.pipe(ignore(['**/m/**', '**/libs/**']))
+		.pipe(uglify())
+		.pipe(header(headerText))
+		.pipe(gulp.dest('./Web/m/'+opts.gitHash+'/'));
+	stream.once('end', cb);
 };
 
 var buildSolution = function(cb){
@@ -181,8 +207,14 @@ var copyProject = function (projPath, projName, dest, cb) {
 	});
 };
 
+var copySolutionProjects = function (cb) {
+	throw new Error("write this"); // !!!!!!!
+};
+
 module.exports = {
 	setOpts: setOpts,
+	runCssMin: runCssMin,
+	runUglify: runUglify,
 	buildSolution: buildSolution,
 	copySolutionProjects: copySolutionProjects,
 	copyProject: copyProject,

@@ -21,7 +21,8 @@ var opts = {
 	// Release: debug: 'false', debugConditional : '',
 	// Debug: debug: 'true', debugConditional : 'DEBUG;TRACE',
 	debug: 'false',
-	debugConditional: ''
+	debugConditional: '',
+	copyrightHeader: 'Copyright {{year}} MyCompany, All Rights Reserved'
 };
 opts.solutionFile = opts.solutionName+'.sln';
 gulp.verbose = true; // show start and end for each task
@@ -56,8 +57,9 @@ gulp.task('revertVersion', version.revertVersion);
 
 // build
 
-// from Grunt: minify, grunt-header, etc !!!!!!!!!!!
-gulp.task('buildSolution', ['clean','version', 'setOpts'], build.buildSolution);
+gulp.task('runCssMin', ['setOpts'], build.runCssMin);
+gulp.task('runUglify', ['setOpts'], build.runUglify);
+gulp.task('buildSolution', ['clean','version', 'runCssMin', 'runUglify', 'setOpts'], build.buildSolution);
 gulp.task('copySolutionProjects', ['buildSolution'], build.copySolutionProjects);
 
 // test
