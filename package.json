@@ -18,6 +18,8 @@
   "dependencies": {
     "rimraf": "~2.2.2",
     "async": "~0.2.9",
-    "minimatch": "~0.2.12"
+    "minimatch": "~0.2.12",
+    "gulp-exec": "0.0.2",
+    "gulp-rimraf": "0.0.2"
   }
 }

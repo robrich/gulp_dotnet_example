@@ -10,8 +10,8 @@ var Q = require('q');
 var rimraf = require('rimraf');
 var setVersion = require('./gulpLib/gulp-setVersion');
 var ignore = require('./gulpLib/gulp-ignore');
-var gulpRimraf = require('./gulpLib/gulp-rimraf');
-var gulpExec = require('./gulpLib/gulp-exec');
+var gulpRimraf = require('gulp-rimraf');
+var gulpExec = require('gulp-exec');
 
 var solutionName = 'GulpTarget';
 var solutionFile = solutionName+'.sln';
