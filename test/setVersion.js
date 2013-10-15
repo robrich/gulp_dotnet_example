@@ -1,5 +1,5 @@
 /*jshint node:true */
-/*global describe:false, it:false, beforeEach:false, afterEach:false */
+/*global describe:false, it:false */
 
 "use strict";
 
@@ -44,32 +44,32 @@ describe('setVersion', function() {
     theTest(
       '[assembly: AssemblyVersion("1.0.0.0")]',
       'abc',
-      '47',
-      '[assembly: AssemblyVersion("1.0.47")]'
+      47,
+      '[assembly: AssemblyVersion("1.0.0.47")]'
     );
   });
   it('should set AssemblyVersion from star', function() {
     theTest(
       '[assembly: AssemblyVersion("1.0.*")]',
       'abc',
-      '47',
-      '[assembly: AssemblyVersion("1.0.47")]'
+      47,
+      '[assembly: AssemblyVersion("1.0.0.47")]'
     );
   });
   it('should set AssemblyVersion with spaces', function() {
     theTest(
       '[assembly: AssemblyVersion( "1.0.0.0" )]',
       'abc',
-      '47',
-      '[assembly: AssemblyVersion( "1.0.47" )]'
+      47,
+      '[assembly: AssemblyVersion( "1.0.0.47" )]'
     );
   });
   it('should override AssemblyVersion', function() {
     theTest(
       '[assembly: AssemblyVersion("1.0.notit")]',
       'abc',
-      '47',
-      '[assembly: AssemblyVersion("1.0.47")]'
+      47,
+      '[assembly: AssemblyVersion("1.0.0.47")]'
     );
   });
   it('should not set AssemblyVersion if no version passed', function() {
@@ -80,13 +80,29 @@ describe('setVersion', function() {
       '[assembly: AssemblyVersion("1.0.0.0")]'
     );
   });
+  it('should set AssemblyVersion from big version', function() {
+    theTest(
+      '[assembly: AssemblyVersion("1.0.notit")]',
+      'abc',
+      47000,
+      '[assembly: AssemblyVersion("1.0.0.47000")]'
+    );
+  });
+  it('should set AssemblyVersion from very big version', function() {
+    theTest(
+      '[assembly: AssemblyVersion("1.0.notit")]',
+      'abc',
+      470000,
+      '[assembly: AssemblyVersion("1.0.7.11255")]'
+    );
+  });
 
   it('should set AssemblyFileVersion', function() {
     theTest(
       '[assembly: AssemblyFileVersion("1.0.0.0")]',
       'abc',
-      '47',
-      '[assembly: AssemblyFileVersion("1.0.47")]'
+      47,
+      '[assembly: AssemblyFileVersion("1.0.0.47")]'
     );
   });
 
@@ -94,8 +110,8 @@ describe('setVersion', function() {
     theTest(
       '\n[assembly: AssemblyInformationalVersion("")]\n[assembly: AssemblyInformationalVersion("")]\n[assembly: AssemblyVersion("1.0.*")]\n[assembly: AssemblyFileVersion("1.0.*")]\n',
       'abc',
-      '47',
-      '\n[assembly: AssemblyInformationalVersion("abc")]\n[assembly: AssemblyInformationalVersion("abc")]\n[assembly: AssemblyVersion("1.0.47")]\n[assembly: AssemblyFileVersion("1.0.47")]\n'
+      47,
+      '\n[assembly: AssemblyInformationalVersion("abc")]\n[assembly: AssemblyInformationalVersion("abc")]\n[assembly: AssemblyVersion("1.0.0.47")]\n[assembly: AssemblyFileVersion("1.0.0.47")]\n'
     );
   });
 
