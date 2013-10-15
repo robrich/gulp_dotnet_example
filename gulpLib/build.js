@@ -12,6 +12,7 @@ var path = require('path');
 var exec = require('child_process').exec;
 var fsExtra = require('fs.extra');
 var async = require('async');
+var parseSlnStream = require('./lib/parseSlnStream');
 
 var opts;
 
@@ -207,8 +208,66 @@ var copyProject = function (projPath, projName, dest, cb) {
 	});
 };
 
-var copySolutionProjects = function (cb) {
-	throw new Error("write this"); // !!!!!!!
+var postBuildWebProject = function (project, cb) {
+	// FRAGILE: If two web projects do this simultaneously bad things may happen
+	async.series([
+		function (cba) {
+			copyProject(project.path, project.name, path.join('dist/Web',project.name), cba);
+		},
+		function (cbb) {
+			packageProject(project.path, project.name, path.join('dist/Web',project.name), cbb);
+		}
+	], cb);
+};
+var postBuildAppProject = function (project, cb) {
+	fsExtra.copyRecursive(path.join(project.base,opts.outputPath), path.join('dist/App',project.name), cb);
+};
+var postBuildTestProject = function (project, cb) {
+	fsExtra.copyRecursive(path.join(project.base,opts.outputPath), path.join('dist/Test',project.name), cb);
+};
+var postBuildDbProject = function (project, cb) {
+	fsExtra.copyRecursive(path.join(project.base,opts.outputPath), path.join('dist/Database',project.name), cb);
+};
+var postBuildLibProject = function (project, cb) {
+	// Nothing to do
+	cb(null);
+};
+
+var postBuildProject = function (project, cb) {
+	if (!project) {
+		return cb(new Error("project is blank"));
+	}
+	switch (project.projectType) {
+		case 'web':
+			postBuildWebProject(project, cb);
+			break;
+		case 'app':
+			postBuildAppProject(project, cb);
+			break;
+		case 'test':
+			postBuildTestProject(project, cb);
+			break;
+		case 'db':
+			postBuildDbProject(project, cb);
+			break;
+		case 'lib':
+			postBuildLibProject(project, cb);
+			break;
+		default:
+			return cb(new Error('Unknown projectType: '+project.projectType+', '+JSON.stringify(project)));
+	}
+};
+
+var postBuildProjects = function (cb) {
+	parseSlnStream(opts.solutionFile, function (err, projects) {
+		if (err) {
+			return cb(err);
+		}
+		if (!projects || !projects.length) {
+			return cb(null); // successfully did nothing
+		}
+		async.each(projects, postBuildProject, cb);
+	});
 };
 
 module.exports = {
@@ -216,7 +275,8 @@ module.exports = {
 	runCssMin: runCssMin,
 	runUglify: runUglify,
 	buildSolution: buildSolution,
-	copySolutionProjects: copySolutionProjects,
 	copyProject: copyProject,
-	packageProject: packageProject
+	packageProject: packageProject,
+	postBuildProject: postBuildProject,
+	postBuildProjects: postBuildProjects
 };

@@ -8,3 +8,4 @@ Release
 *.suo
 Web/bin
 .idea
+temp.txt
