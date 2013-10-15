@@ -19,7 +19,8 @@ var opts = {
 	msbuildVerbosity: 'Minimal',
 	configuration: 'Release',
 	debug: false,
-	copyrightHeader: 'Copyright {{year}} MyCompany, All Rights Reserved'
+	copyrightHeader: 'Copyright {{year}} MyCompany, All Rights Reserved',
+	deployLocation: 'D:\\JenkinsDrops\\WSB_All'
 };
 opts.solutionFile = opts.solutionName+'.sln';
 opts.debugConditional = opts.debug ? 'DEBUG;TRACE' : '';
@@ -39,7 +40,7 @@ gulp.task('clean', ['cleanVersioned', 'cleanUnversioned'], noop);
 gulp.task('version', ['getGitHash', 'getBuildNumber', 'setVersion'], noop);
 gulp.task('build', ['clean','version', 'buildSolution', 'postBuildProjects'], noop);
 gulp.task('test', ['build', 'runJSHint', 'runCssLint', 'runNUnit'], noop);
-gulp.task('deploy', ['build','test', 'deployToJenkinsDrops'], noop);
+gulp.task('deploy', ['build','test', 'copyToDeployLocation'], noop);
 
 // clean
 
@@ -70,7 +71,7 @@ gulp.task('runNUnit', ['build', 'setOpts'], test.runNUnit);
 
 // deploy
 
-gulp.task('deployToJenkinsDrops', ['setOpts'], deploy.deployToJenkinsDrops);
+gulp.task('copyToDeployLocation', ['setOpts'], deploy.copyToDeployLocation);
 
 // generic
 

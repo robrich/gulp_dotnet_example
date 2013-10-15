@@ -11,13 +11,11 @@ var setOpts = function (o) {
 	opts = o;
 };
 
-var deployToJenkinsDrops = function (cb) {
-	fsExtra.copyRecursive('./dist/Web/Web', 'D:\\JenkinsDrops\\WSB_All', function (err) {
-		cb(err);
-	});
+var copyToDeployLocation = function (cb) {
+	fsExtra.copyRecursive('./dist/Web/Web', opts.deployLocation, cb);
 };
 
 module.exports = {
-	deployToJenkinsDrops: deployToJenkinsDrops,
+	copyToDeployLocation: copyToDeployLocation,
 	setOpts: setOpts
 };
