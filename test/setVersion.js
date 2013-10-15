@@ -3,7 +3,7 @@
 
 "use strict";
 
-var setVersion = require('../gulpLib/setVersion');
+var setVersion = require('../gulpLib/lib/setVersion');
 require('should');
 require('mocha');
 
@@ -15,28 +15,28 @@ describe('setVersion', function() {
   };
 
 
-  it('should set AssemblyDescription', function() {
+  it('should set AssemblyInformationalVersion', function() {
     theTest(
-      '[assembly: AssemblyDescription("")]',
+      '[assembly: AssemblyInformationalVersion("")]',
       'abc',
       undefined,
-      '[assembly: AssemblyDescription("abc")]'
+      '[assembly: AssemblyInformationalVersion("abc")]'
     );
   });
-  it('should set AssemblyDescription with spaces', function() {
+  it('should set AssemblyInformationalVersion with spaces', function() {
     theTest(
-      '[assembly:AssemblyDescription( "" )]',
+      '[assembly:AssemblyInformationalVersion( "" )]',
       'abc',
       undefined,
-      '[assembly:AssemblyDescription( "abc" )]'
+      '[assembly:AssemblyInformationalVersion( "abc" )]'
     );
   });
-  it('should override AssemblyDescription', function() {
+  it('should override AssemblyInformationalVersion', function() {
     theTest(
-      '[assembly: AssemblyDescription("notit")]',
+      '[assembly: AssemblyInformationalVersion("notit")]',
       'abc',
       undefined,
-      '[assembly: AssemblyDescription("abc")]'
+      '[assembly: AssemblyInformationalVersion("abc")]'
     );
   });
 
@@ -92,10 +92,10 @@ describe('setVersion', function() {
 
   it('should set all of them', function() {
     theTest(
-      '\n[assembly: AssemblyDescription("")]\n[assembly: AssemblyDescription("")]\n[assembly: AssemblyVersion("1.0.*")]\n[assembly: AssemblyFileVersion("1.0.*")]\n',
+      '\n[assembly: AssemblyInformationalVersion("")]\n[assembly: AssemblyInformationalVersion("")]\n[assembly: AssemblyVersion("1.0.*")]\n[assembly: AssemblyFileVersion("1.0.*")]\n',
       'abc',
       '47',
-      '\n[assembly: AssemblyDescription("abc")]\n[assembly: AssemblyDescription("abc")]\n[assembly: AssemblyVersion("1.0.47")]\n[assembly: AssemblyFileVersion("1.0.47")]\n'
+      '\n[assembly: AssemblyInformationalVersion("abc")]\n[assembly: AssemblyInformationalVersion("abc")]\n[assembly: AssemblyVersion("1.0.47")]\n[assembly: AssemblyFileVersion("1.0.47")]\n'
     );
   });
 

@@ -3,7 +3,6 @@
 "use strict";
 
 var es = require('event-stream'),
-	clone = require('clone'),
 	setVersion = require('./setVersion');
 
 module.exports = function(gitHash, fileVersion){
@@ -14,14 +13,10 @@ module.exports = function(gitHash, fileVersion){
 
 	// our map function
 	function modifyContents(file, cb){
-		var newFile = clone(file);
-
 		var fileContents = String(file.contents);
-
 		var newContents = setVersion(fileContents, gitHash, fileVersion);
-
-		newFile.contents = new Buffer(newContents);
-		cb(null, newFile);
+		file.contents = new Buffer(newContents);
+		cb(null, file);
 	}
 
 	return es.map(modifyContents);
