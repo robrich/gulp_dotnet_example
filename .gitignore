@@ -1,4 +1,5 @@
 node_modules
+packages
 dist
 log
 obj
@@ -9,3 +10,4 @@ Release
 Web/bin
 .idea
 temp.txt
+*.orig
