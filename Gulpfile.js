@@ -26,7 +26,9 @@ opts.solutionFile = opts.solutionName+'.sln';
 opts.debugConditional = opts.debug ? 'DEBUG;TRACE' : '';
 opts.outputPath = opts.debug ? 'bin/Debug' : 'bin/Release';
 
-gulp.verbose = true; // show start and end for each task
+gulp.onAll(function (e) {
+	console.log('[gulp:'+e.src+(e.task?', task:'+e.task:'')+', mess:"'+e.mess+'"]'); // show start and end for each task
+});
 
 
 var noop = function () {};
