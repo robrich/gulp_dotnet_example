@@ -60,20 +60,20 @@ gulp.task('revertVersion', version.revertVersion);
 
 // build
 
-gulp.task('runCssMin', ['setOpts'], build.runCssMin);
-gulp.task('runUglify', ['setOpts'], build.runUglify);
+gulp.task('runCssMin', ['clean', 'setOpts'], build.runCssMin);
+gulp.task('runUglify', ['clean', 'setOpts'], build.runUglify);
 gulp.task('buildSolution', ['clean','version', 'runCssMin', 'runUglify', 'setOpts'], build.buildSolution);
 gulp.task('postBuildProjects', ['buildSolution'], build.postBuildProjects);
 
 // test
 
-gulp.task('runJSHint', test.runJSHint);
-gulp.task('runCssLint', test.runCssLint);
+gulp.task('runJSHint', ['clean'], test.runJSHint);
+gulp.task('runCssLint', ['clean'], test.runCssLint);
 gulp.task('runNUnit', ['build', 'setOpts'], test.runNUnit);
 
 // deploy
 
-gulp.task('copyToDeployLocation', ['setOpts'], deploy.copyToDeployLocation);
+gulp.task('copyToDeployLocation', ['setOpts', 'build', 'test'], deploy.copyToDeployLocation);
 
 // generic
 
