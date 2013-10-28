@@ -5,6 +5,7 @@
 var exec = require('child_process').exec;
 var gulp = require('gulp');
 var ignore = require('./lib/gulp-ignore');
+var verbose = require('./lib/gulp-verbose');
 var gulpSetVersion = require('./lib/gulp-setVersion');
 var gulpExec = require('gulp-exec');
 
@@ -38,8 +39,10 @@ var getGitHash = function (callback) {
 };
 
 var setVersion = function (callback) {
+	var mess = opts.verbose ? 'set version '+opts.gitHash+', '+opts.buildNumber+' in $file' : '';
 	var stream = gulp.src("./**/*AssemblyInfo.cs")
 		.pipe(ignore("./dist"))
+		.pipe(verbose(mess))
 		.pipe(gulpSetVersion(opts.gitHash, opts.buildNumber))
 		.pipe(gulp.dest("./"));
 	stream.once('end', callback);
