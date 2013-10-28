@@ -7,6 +7,7 @@ var rimraf = require('rimraf');
 var gulp = require('gulp');
 var gulpRimraf = require('gulp-rimraf');
 var ignore = require('./lib/gulp-ignore');
+var verbose = require('./lib/gulp-verbose');
 var exec = require('child_process').exec;
 
 var cleanUnversioned = function (cb) {
@@ -18,8 +19,9 @@ var cleanUnversioned = function (cb) {
 			rimraf('./log', cbb);
 		},
 		function (cbc) {
-			var stream = gulp.src('{**/bin,**/obj,**/Debug,**/Release}')
-				.pipe(ignore(['node_modules','packages']))
+			var stream = gulp.src('{**/bin,**/obj,**/Debug,**/Release}',{read:false})
+				.pipe(ignore(['node_modules/**','packages/**']))
+				.pipe(verbose('deleting $file'))
 				.pipe(gulpRimraf());
 			stream.once('end', cbc);
 		}
