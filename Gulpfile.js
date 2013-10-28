@@ -34,7 +34,6 @@ gulp.onAll(function (e) {
 		console.log('  gulp:'+e.src+(e.task?', task:'+e.task:'')+', mess:"'+e.mess+'"'); // show start and end for each task
 	}
 	if (e.err) {
-		console.trace(e.err);
 		throw e.err;
 	}
 });

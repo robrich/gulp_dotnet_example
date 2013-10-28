@@ -5,6 +5,7 @@
 var gulp = require('gulp');
 var jshint = require('gulp-jshint');
 //var csslint = require('gulp-csslint');
+var ignore = require('./lib/gulp-ignore');
 var async = require('async');
 var path = require('path');
 var fs = require('fs');
@@ -32,9 +33,9 @@ var runJSHint = function (cb) {
 		jquery: true
 	};
 	// TODO: junit log at log/jshint.xml
-	var stream = gulp.files('./**/*.js')
-		.ignore('./dist')
-		.ignore('./Web/js/libs/**')
+	var stream = gulp.src('./**/*.js')
+		.pipe(ignore(['**/*.min.js','./dist/**','./Web/js/libs/**']))
+		.pipe(ignore(['./node_modules/**','./packages/**']))
 		.pipe(jshint(opts));
 	stream.once('end', cb);
 };
@@ -63,13 +64,14 @@ var runCssLint = function (cb) {
 		'zero-units': 2
 		// TODO: Expand this as necessary
 	};
-	var stream = gulp.files(' . / * * / * . c s s ')
-		.ignore('./dist')
-		.ignore('. / W e b / c s s / l i b s / * * ')
+	var stream = gulp.src(' . / * * / * . c s s ')
+		.pipe(ignore([' * * / * . m i n . c s s ',' . / d i s t / * *','. / W e b / c s s / l i b s / * * '))
+		.pipe(ignore([' n o d e _ m o d u l e s / * * ',' p a c k a g e s / * * ']))
 		.pipe(csslint(opts));
 	stream.once('end', cb);
 };
 */
+// TODO: run real process when gulp-csslint is done !!!
 var runCssLint = function (cb) {
 	cb(null);
 };
