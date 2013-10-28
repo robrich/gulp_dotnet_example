@@ -49,8 +49,7 @@ opts.jshint = {
 	"regexp": true,
 	"undef": true,
 	"unused": true,
-	"strict": true,
-	//"reporter": "jshint/src/reporters/jslint_xml.js"
+	"strict": true
 };
 
 gulp.onAll(function (e) {

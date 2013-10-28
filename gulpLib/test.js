@@ -11,6 +11,7 @@ var path = require('path');
 var fs = require('fs');
 var exec = require('child_process').exec;
 var verbose = require('./lib/gulp-verbose');
+var es = require('event-stream');
 
 
 var opts;
@@ -21,13 +22,28 @@ var setOpts = function (o) {
 
 var runJSHint = function (cb) {
 	// TODO: junit log at log/jshint.xml
+	var jshintSuccess = false; // nothing disputed it yet
 	var mess = opts.verbose ? 'linting $file' : '';
 	var stream = gulp.src('./**/*.js')
 		.pipe(ignore(['./**/*.min.js','./dist/**','./**/libs/**']))
 		.pipe(ignore(['./node_modules/**','./packages/**']))
 		.pipe(verbose(mess))
-		.pipe(jshint(opts.jshint));
-	stream.once('end', cb);
+		.pipe(jshint(opts.jshint))
+		.pipe(es.map(function (file, cb) {
+			if (!file.jshintSuccess) {
+				jshintSuccess = false;
+				file.jshintResults.forEach(function (err/*, index*/) {
+					console.log(err.mess);
+				});
+			}
+			cb(null, file);
+		}));
+	stream.once('end', function () {
+		if (!jshintSuccess) {
+			throw new Error('JSHint failed on one or more files');
+		}
+		cb();
+	});
 };
 
 /*
