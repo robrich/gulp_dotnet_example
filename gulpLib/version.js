@@ -37,16 +37,6 @@ var getGitHash = function (callback) {
 	});
 };
 
-var getBuildNumber = function () {
-	// runs synchronously, no need to wait for it
-	opts.buildNumber = process.env.BUILD_NUMBER;
-	if (opts.buildNumber) {
-		console.log("BUILD_NUMBER: '"+opts.buildNumber+"'");
-	} else {
-		console.log("BUILD_NUMBER: "+opts.buildNumber);
-	}
-};
-
 var setVersion = function (callback) {
 	var stream = gulp.src("./**/*AssemblyInfo.cs")
 		.pipe(ignore("./dist"))
@@ -65,7 +55,6 @@ var revertVersion = function (callback) {
 
 module.exports = {
 	getGitHash: getGitHash,
-	getBuildNumber: getBuildNumber,
 	setVersion: setVersion,
 	revertVersion: revertVersion,
 	setOpts: setOpts

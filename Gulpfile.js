@@ -19,6 +19,7 @@ var opts = {
 	msbuildVerbosity: 'Minimal',
 	configuration: 'Release',
 	debug: false,
+	buildNumber: process.env.BUILD_NUMBER,
 	copyrightHeader: 'Copyright {{year}} MyCompany, All Rights Reserved',
 	deployLocation: 'D:\\JenkinsDrops\\WSB_All',
 	verbose: true
@@ -46,7 +47,7 @@ gulp.task('default', ['clean', 'version', 'build', 'test', 'deploy'], noop);
 
 // The main 5 steps:
 gulp.task('clean', ['cleanVersioned', 'cleanUnversioned'], noop);
-gulp.task('version', ['getGitHash', 'getBuildNumber', 'setVersion'], noop);
+gulp.task('version', ['getGitHash', 'setVersion'], noop);
 gulp.task('build', ['clean','version', 'buildSolution', 'postBuildProjects'], noop);
 gulp.task('test', ['build', 'runJSHint', 'runCssLint', 'runNUnit'], noop);
 gulp.task('deploy', ['build','test', 'copyToDeployLocation'], noop);
@@ -59,8 +60,7 @@ gulp.task('cleanVersioned', ['setOpts'], clean.cleanVersioned);
 // version
 
 gulp.task('getGitHash', ['setOpts'], version.getGitHash);
-gulp.task('getBuildNumber', ['setOpts'], version.getBuildNumber);
-gulp.task('setVersion', ['clean', 'getGitHash', 'getBuildNumber'], version.setVersion);
+gulp.task('setVersion', ['clean', 'getGitHash'], version.setVersion);
 // Helpful for developers who want to put it back, not directly referenced by the build
 // `gulp revertVersion` from a cmd
 gulp.task('revertVersion', version.revertVersion);
