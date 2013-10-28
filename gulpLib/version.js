@@ -50,9 +50,10 @@ var setVersion = function (callback) {
 
 // Helpful for develpers who want to put it back, not directly referenced by the build
 var revertVersion = function (callback) {
-	var stream = gulp.src("./**/*AssemblyInfo.cs")
+	var stream = gulp.src("./**/*AssemblyInfo.cs",{read:false})
 		.pipe(ignore("./dist"))
-		.pipe(gulpExec('git checkout $file'));
+		.pipe(verbose('reverting $file'))
+		.pipe(gulpExec('git checkout "$file"'));
 	stream.once('end', callback);
 };
 
