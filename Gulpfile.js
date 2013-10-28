@@ -28,6 +28,31 @@ opts.solutionFile = opts.solutionName+'.sln';
 opts.debugConditional = opts.debug ? 'DEBUG;TRACE' : '';
 opts.outputPath = opts.debug ? 'bin/Debug' : 'bin/Release';
 
+opts.jshint = {
+	"evil": false,
+	"regexdash": false,
+	"browser": false,
+	"wsh": false,
+	"trailing": false,
+	"sub": false,
+	"bitwise": true,
+	"camelcase": true,
+	"curly": true,
+	"eqeqeq": true,
+	"forin": true,
+	"immed": true,
+	"latedef": true,
+	"newcap": true,
+	"noarg": true,
+	"noempty": true,
+	"nonew": true,
+	"regexp": true,
+	"undef": true,
+	"unused": true,
+	"strict": true,
+	//"reporter": "jshint/src/reporters/jslint_xml.js"
+};
+
 gulp.onAll(function (e) {
 	if (opts.verbose) {
 		console.log('');
@@ -74,7 +99,7 @@ gulp.task('postBuildProjects', ['buildSolution'], build.postBuildProjects);
 
 // test
 
-gulp.task('runJSHint', ['clean'], test.runJSHint);
+gulp.task('runJSHint', ['setOpts', 'clean'], test.runJSHint);
 gulp.task('runCssLint', ['clean'], test.runCssLint);
 gulp.task('runNUnit', ['build', 'setOpts'], test.runNUnit);
 

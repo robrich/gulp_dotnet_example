@@ -10,6 +10,7 @@ var async = require('async');
 var path = require('path');
 var fs = require('fs');
 var exec = require('child_process').exec;
+var verbose = require('./lib/gulp-verbose');
 
 
 var opts;
@@ -19,24 +20,13 @@ var setOpts = function (o) {
 };
 
 var runJSHint = function (cb) {
-	var opts = {
-		curly: true,
-		eqeqeq: true,
-		forin: true,
-		immed: true,
-		noarg: true,
-		nonew: true,
-		undef: true,
-		unused: true,
-		strict: true,
-		browser: true,
-		jquery: true
-	};
 	// TODO: junit log at log/jshint.xml
+	var mess = opts.verbose ? 'linting $file' : '';
 	var stream = gulp.src('./**/*.js')
-		.pipe(ignore(['**/*.min.js','./dist/**','./Web/js/libs/**']))
+		.pipe(ignore(['./**/*.min.js','./dist/**','./**/libs/**']))
 		.pipe(ignore(['./node_modules/**','./packages/**']))
-		.pipe(jshint(opts));
+		.pipe(verbose(mess))
+		.pipe(jshint(opts.jshint));
 	stream.once('end', cb);
 };
 
@@ -65,7 +55,7 @@ var runCssLint = function (cb) {
 		// TODO: Expand this as necessary
 	};
 	var stream = gulp.src(' . / * * / * . c s s ')
-		.pipe(ignore([' * * / * . m i n . c s s ',' . / d i s t / * *','. / W e b / c s s / l i b s / * * '))
+		.pipe(ignore([' * * / * . m i n . c s s ',' . / d i s t / * *',' * * / l i b s / * * '))
 		.pipe(ignore([' n o d e _ m o d u l e s / * * ',' p a c k a g e s / * * ']))
 		.pipe(csslint(opts));
 	stream.once('end', cb);
