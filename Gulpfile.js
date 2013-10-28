@@ -30,7 +30,8 @@ opts.outputPath = opts.debug ? 'bin/Debug' : 'bin/Release';
 
 gulp.onAll(function (e) {
 	if (opts.verbose) {
-		console.log('[gulp:'+e.src+(e.task?', task:'+e.task:'')+', mess:"'+e.mess+'"]'); // show start and end for each task
+		console.log('');
+		console.log('  gulp:'+e.src+(e.task?', task:'+e.task:'')+', mess:"'+e.mess+'"'); // show start and end for each task
 	}
 	if (e.err) {
 		console.trace(e.err);
