@@ -10,6 +10,13 @@ var ignore = require('./lib/gulp-ignore');
 var verbose = require('./lib/gulp-verbose');
 var exec = require('child_process').exec;
 
+
+var opts;
+
+var setOpts = function (o) {
+	opts = o;
+};
+
 var cleanUnversioned = function (cb) {
 	async.parallel([
 		function (cba) {
@@ -19,9 +26,10 @@ var cleanUnversioned = function (cb) {
 			rimraf('./log', cbb);
 		},
 		function (cbc) {
+			var mess = opts.verbose ? 'deleting $file' : '';
 			var stream = gulp.src('{**/bin,**/obj,**/Debug,**/Release}',{read:false})
 				.pipe(ignore(['node_modules/**','packages/**']))
-				.pipe(verbose('deleting $file'))
+				.pipe(verbose(mess))
 				.pipe(gulpRimraf());
 			stream.once('end', cbc);
 		}
@@ -37,7 +45,7 @@ var cleanVersioned = function (cb) {
 		if (stdout) {
 			stdout = stdout.trim(); // Trim trailing cr-lf
 		}
-		if (stdout) {
+		if (stdout && opts.verbose) {
 			console.log(stdout);
 		}
 		if (error) {
@@ -49,5 +57,6 @@ var cleanVersioned = function (cb) {
 
 module.exports = {
 	cleanUnversioned: cleanUnversioned,
-	cleanVersioned: cleanVersioned
+	cleanVersioned: cleanVersioned,
+	setOpts : setOpts
 };

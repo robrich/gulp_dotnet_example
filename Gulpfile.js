@@ -20,14 +20,21 @@ var opts = {
 	configuration: 'Release',
 	debug: false,
 	copyrightHeader: 'Copyright {{year}} MyCompany, All Rights Reserved',
-	deployLocation: 'D:\\JenkinsDrops\\WSB_All'
+	deployLocation: 'D:\\JenkinsDrops\\WSB_All',
+	verbose: true
 };
 opts.solutionFile = opts.solutionName+'.sln';
 opts.debugConditional = opts.debug ? 'DEBUG;TRACE' : '';
 opts.outputPath = opts.debug ? 'bin/Debug' : 'bin/Release';
 
 gulp.onAll(function (e) {
-	console.log('[gulp:'+e.src+(e.task?', task:'+e.task:'')+', mess:"'+e.mess+'"]'); // show start and end for each task
+	if (opts.verbose) {
+		console.log('[gulp:'+e.src+(e.task?', task:'+e.task:'')+', mess:"'+e.mess+'"]'); // show start and end for each task
+	}
+	if (e.err) {
+		console.trace(e.err);
+		throw e.err;
+	}
 });
 
 
@@ -46,8 +53,8 @@ gulp.task('deploy', ['build','test', 'copyToDeployLocation'], noop);
 
 // clean
 
-gulp.task('cleanUnversioned', clean.cleanUnversioned);
-gulp.task('cleanVersioned', clean.cleanVersioned);
+gulp.task('cleanUnversioned', ['setOpts'], clean.cleanUnversioned);
+gulp.task('cleanVersioned', ['setOpts'], clean.cleanVersioned);
 
 // version
 
@@ -78,6 +85,7 @@ gulp.task('copyToDeployLocation', ['setOpts', 'build', 'test'], deploy.copyToDep
 // generic
 
 gulp.task('setOpts', function () {
+	clean.setOpts(opts);
 	version.setOpts(opts);
 	build.setOpts(opts);
 	test.setOpts(opts);
