@@ -94,7 +94,7 @@ gulp.task('revertVersion', version.revertVersion);
 gulp.task('runCssMin', ['clean', 'setOpts'], build.runCssMin);
 gulp.task('runUglify', ['clean', 'setOpts'], build.runUglify);
 gulp.task('buildSolution', ['clean','version', 'runCssMin', 'runUglify', 'setOpts'], build.buildSolution);
-gulp.task('postBuildProjects', ['buildSolution'], build.postBuildProjects);
+gulp.task('postBuildProjects', ['buildSolution','runCssMin','runUglify'], build.postBuildProjects);
 
 // test
 

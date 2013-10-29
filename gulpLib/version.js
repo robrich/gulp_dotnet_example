@@ -26,11 +26,10 @@ var getGitHash = function (callback) {
 		}
 		if (error) {
 			console.log('git errored with exit code '+error.code);
-			callback(error);
-			return;
+			return callback(error);
 		}
 		if (!stdout) {
-			callback(new Error('git log retured no results'));
+			return callback(new Error('git log retured no results'));
 		}
 		opts.gitHash = stdout;
 		console.log("gitHash: '" + opts.gitHash + "'");
@@ -41,7 +40,7 @@ var getGitHash = function (callback) {
 var setVersion = function (callback) {
 	var mess = opts.verbose ? 'set version '+opts.gitHash+', '+opts.buildNumber+' in $file' : '';
 	var stream = gulp.src("./**/*AssemblyInfo.cs")
-		.pipe(ignore("./dist"))
+		.pipe(ignore("./dist/**"))
 		.pipe(verbose(mess))
 		.pipe(gulpSetVersion(opts.gitHash, opts.buildNumber))
 		.pipe(gulp.dest("./"));
@@ -51,7 +50,7 @@ var setVersion = function (callback) {
 // Helpful for develpers who want to put it back, not directly referenced by the build
 var revertVersion = function (callback) {
 	var stream = gulp.src("./**/*AssemblyInfo.cs",{read:false})
-		.pipe(ignore("./dist"))
+		.pipe(ignore("./dist/**"))
 		.pipe(verbose('reverting $file'))
 		.pipe(gulpExec('git checkout "$file"'));
 	stream.once('end', callback);

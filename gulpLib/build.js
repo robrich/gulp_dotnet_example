@@ -195,7 +195,7 @@ var copyProject = function (projPath, projName, dest, cb) {
 					// copy transformed web.config (if any)
 					var exists = fs.existsSync(projPath+'/obj/'+opts.configuration+'/TransformWebConfig/transformed/Web.config'); // async doesn't pass error, will sync throw it?
 					if (exists) {
-						fsExtra.copy(projPath+'/obj/'+opts.configuration+'/TransformWebConfig/transformed/Web.config', function (err) {
+						fsExtra.copy(projPath+'/obj/'+opts.configuration+'/TransformWebConfig/transformed/Web.config', dest+'/Web.config', function (err) {
 							cbb(err);
 						});
 					} else {
