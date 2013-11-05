@@ -22,19 +22,17 @@ var setOpts = function (o) {
 
 var runJSHint = function (cb) {
 	// TODO: junit log at log/jshint.xml
-	var jshintSuccess = false; // nothing disputed it yet
+	var jshintSuccess = true; // nothing disputed it yet
 	var mess = opts.verbose ? 'linting $file' : '';
 	var stream = gulp.src('./**/*.js')
 		.pipe(ignore(['./**/*.min.js','./dist/**','./**/libs/**']))
 		.pipe(ignore(['./node_modules/**','./packages/**']))
 		.pipe(verbose(mess))
 		.pipe(jshint(opts.jshint))
+		.pipe(jshint.reporterSimple())
 		.pipe(es.map(function (file, cb) {
-			if (!file.jshintSuccess) {
+			if (!file.jshint.success) {
 				jshintSuccess = false;
-				file.jshintResults.forEach(function (err/*, index*/) {
-					console.log(err.mess);
-				});
 			}
 			cb(null, file);
 		}));

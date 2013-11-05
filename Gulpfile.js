@@ -52,13 +52,11 @@ opts.jshint = {
 	"strict": true
 };
 
-gulp.onAll(function (e) {
-	if (opts.verbose) {
-		console.log('');
-		console.log('  gulp:'+e.src+(e.task?', task:'+e.task:'')+', mess:"'+e.mess+'"'); // show start and end for each task
-	}
+gulp.on('err', function (e) {
 	if (e.err) {
-		throw e.err;
+		console.log();
+		console.log('Gulp build failed:');
+		process.exit(1);
 	}
 });
 
@@ -71,7 +69,7 @@ gulp.task('default', ['clean', 'version', 'build', 'test', 'deploy'], noop);
 
 // The main 5 steps:
 gulp.task('clean', ['cleanVersioned', 'cleanUnversioned'], noop);
-gulp.task('version', ['getGitHash', 'setVersion'], noop);
+gulp.task('version', ['getGitHash', 'getGitBranch', 'setVersion'], noop);
 gulp.task('build', ['clean','version', 'buildSolution', 'postBuildProjects'], noop);
 gulp.task('test', ['build', 'runJSHint', 'runCssLint', 'runNUnit'], noop);
 gulp.task('deploy', ['build','test', 'copyToDeployLocation'], noop);
@@ -84,7 +82,8 @@ gulp.task('cleanVersioned', ['setOpts'], clean.cleanVersioned);
 // version
 
 gulp.task('getGitHash', ['setOpts'], version.getGitHash);
-gulp.task('setVersion', ['clean', 'getGitHash'], version.setVersion);
+gulp.task('getGitBranch', ['setOpts'], version.getGitBranch);
+gulp.task('setVersion', ['clean', 'getGitHash','getGitBranch'], version.setVersion);
 // Helpful for developers who want to put it back, not directly referenced by the build
 // `gulp revertVersion` from a cmd
 gulp.task('revertVersion', version.revertVersion);

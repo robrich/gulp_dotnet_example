@@ -37,6 +37,35 @@ var getGitHash = function (callback) {
 	});
 };
 
+var getGitBranch = function (cb) {
+	exec('git branch -v', function (error, stdout, stderr) {
+		if (stderr) {
+			console.log(stderr);
+		}
+		if (stdout) {
+			stdout = stdout.trim(); // Trim trailing cr-lf
+		}
+		if (error) {
+			console.log('git errored with exit code '+error.code);
+			return cb(error);
+		}
+		if (!stdout) {
+			return cb(new Error('git branch -v no results'));
+		}
+		var lines = stdout.split(/[\r?\n]/);
+		lines.forEach(function (line) {
+			if (line.indexOf('*') === 0) {
+				opts.gitBranch = line.split(' ')[1].trim();
+			}
+		});
+		if (!opts.gitBranch) {
+			cb('Can\t find git branch');
+		}
+		console.log("gitBranch: '" + opts.gitBranch + "'");
+		cb(null, opts.gitBranch);
+	});
+};
+
 var setVersion = function (callback) {
 	var mess = opts.verbose ? 'set version '+opts.gitHash+', '+opts.buildNumber+' in $file' : '';
 	var stream = gulp.src("./**/*AssemblyInfo.cs")
@@ -58,6 +87,7 @@ var revertVersion = function (callback) {
 
 module.exports = {
 	getGitHash: getGitHash,
+	getGitBranch: getGitBranch,
 	setVersion: setVersion,
 	revertVersion: revertVersion,
 	setOpts: setOpts
