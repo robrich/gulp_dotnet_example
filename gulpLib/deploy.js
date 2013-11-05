@@ -2,7 +2,7 @@
 
 "use strict";
 
-var fsExtra = require('fs.extra');
+var ncp = require('ncp');
 
 
 var opts;
@@ -12,7 +12,7 @@ var setOpts = function (o) {
 };
 
 var copyToDeployLocation = function (cb) {
-	fsExtra.copyRecursive('./dist/Web/Web', opts.deployLocation, cb);
+	ncp('./dist/Web/Web', opts.deployLocation, cb);
 };
 
 module.exports = {

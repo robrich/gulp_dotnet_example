@@ -28,6 +28,7 @@ opts.solutionFile = opts.solutionName+'.sln';
 opts.debugConditional = opts.debug ? 'DEBUG;TRACE' : '';
 opts.outputPath = opts.debug ? 'bin/Debug' : 'bin/Release';
 
+
 opts.jshint = {
 	"evil": false,
 	"regexdash": false,
@@ -90,9 +91,9 @@ gulp.task('revertVersion', version.revertVersion);
 
 // build
 
-gulp.task('runCssMin', ['clean', 'setOpts'], build.runCssMin);
-gulp.task('runUglify', ['clean', 'setOpts'], build.runUglify);
-gulp.task('buildSolution', ['clean','version', 'runCssMin', 'runUglify', 'setOpts'], build.buildSolution);
+gulp.task('runCssMin', ['clean','version', 'setOpts'], build.runCssMin);
+gulp.task('runUglify', ['clean','version', 'setOpts'], build.runUglify);
+gulp.task('buildSolution', ['clean','version', 'setOpts', 'runCssMin', 'runUglify'], build.buildSolution);
 gulp.task('postBuildProjects', ['buildSolution','runCssMin','runUglify'], build.postBuildProjects);
 
 // test

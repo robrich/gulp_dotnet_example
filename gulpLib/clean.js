@@ -27,7 +27,7 @@ var cleanUnversioned = function (cb) {
 		},
 		function (cbc) {
 			var mess = opts.verbose ? 'deleting $file' : '';
-			var stream = gulp.src('{**/bin,**/obj,**/Debug,**/Release}',{read:false})
+			var stream = gulp.src('{**/bin,**/obj,**/Debug,**/Release,./Web/m}',{read:false})
 				.pipe(ignore(['node_modules/**','packages/**']))
 				.pipe(verbose(mess))
 				.pipe(gulpRimraf());
