@@ -82,13 +82,27 @@ var runCssLint = function (cb) {
 
 var runNUnitForProject = function (projectPath, cb) {
 	fs.mkdir('log', function (err) {
+		if (err && err.code === 'EEXIST') {
+			err = null; // Ignore 'directory already exists' error
+		}
 		if (err) {
 			throw new Error(err);
 		}
 
-		var dllName = path.basename(projectPath)+'.dll';
-		var fullPath = path.resolve(projectPath+'/'+dllName).replace(/\//,'\\');
-		var logFile = path.resolve('log/'+dllName+'.nunit.xml').replace(/\//,'\\');
+		var projectName = path.basename(projectPath);
+
+		// is it projectName.dll or is it solutionName.projectName.dll?
+		var dllName = opts.solutionName+'.'+path.basename(projectPath)+'.dll';
+		var fullPath = path.join('dist/test',projectPath,dllName);
+		if (!fs.existsSync(fullPath)) {
+			dllName = projectName+'.dll';
+			fullPath = path.join('dist/test',projectPath,dllName);
+		}
+		if (!fs.existsSync(fullPath)) {
+			return cb('Can\'t find NUnit test dll for '+projectPath);
+		}
+		var fullPathBackslash = path.resolve(fullPath).replace(/\//,'\\');
+		var logFile = path.resolve(path.join('log',dllName+'.nunit.xml')).replace(/\//,'\\');
 
 		var cmds = [
 			"nunit-console-x86.exe"
@@ -97,11 +111,13 @@ var runNUnitForProject = function (projectPath, cb) {
 			'/nodots',
 			'/xml:'+logFile,
 			'/framework='+opts.frameworkName,
-			'/config:'+fullPath+'.config',
-			fullPath
+			'/config:'+fullPathBackslash+'.config',
+			fullPathBackslash
 		];
 		var cmd = '"'+cmds.concat(args).join('" "')+'"';
-		console.log('NUnit '+dllName+': '+cmd);
+		if (opts.verbose) {
+			console.log('NUnit '+dllName+': '+cmd);
+		}
 		exec(cmd, function (error, stdout, stderr) {
 			if (stderr) {
 				console.log(stderr);
@@ -122,6 +138,11 @@ var runNUnitForProject = function (projectPath, cb) {
 
 var runNUnit = function (cb) {
 	fs.readdir('./dist/Test/', function (err, projects) {
+
+		if (err && err.code === 'ENOENT') {
+			return cb(null); // There are no tests
+		}
+
 		if (err) {
 			return cb(err);
 		}
@@ -136,10 +157,16 @@ var runNUnit = function (cb) {
 	});
 };
 
+var runJSTests = function (cb) {
+	// TODO: this is likely implimentation specific
+	cb(null);
+};
+
 module.exports = {
 	runJSHint: runJSHint,
 	runCssLint: runCssLint,
 	runNUnit: runNUnit,
 	runNUnitForProject: runNUnitForProject,
+	runJSTests: runJSTests,
 	setOpts: setOpts
 };

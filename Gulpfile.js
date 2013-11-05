@@ -72,7 +72,7 @@ gulp.task('default', ['clean', 'version', 'build', 'test', 'deploy'], noop);
 gulp.task('clean', ['cleanVersioned', 'cleanUnversioned'], noop);
 gulp.task('version', ['getGitHash', 'getGitBranch', 'setVersion'], noop);
 gulp.task('build', ['clean','version', 'buildSolution', 'postBuildProjects'], noop);
-gulp.task('test', ['build', 'runJSHint', 'runCssLint', 'runNUnit'], noop);
+gulp.task('test', ['build', 'runJSHint', 'runJSTests', 'runCssLint', 'runNUnit'], noop);
 gulp.task('deploy', ['build','test', 'copyToDeployLocation'], noop);
 
 // clean
@@ -100,6 +100,7 @@ gulp.task('postBuildProjects', ['buildSolution','runCssMin','runUglify'], build.
 
 gulp.task('runJSHint', ['setOpts', 'clean'], test.runJSHint);
 gulp.task('runCssLint', ['clean'], test.runCssLint);
+gulp.task('runJSTests', ['setOpts', 'clean'], test.runJSTests);
 gulp.task('runNUnit', ['build', 'setOpts'], test.runNUnit);
 
 // deploy
