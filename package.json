@@ -1,7 +1,8 @@
 {
-  "name": "wsb",
-  "version": "0.0.0",
-  "description": "GoDaddy Website Builder",
+  "name": "gulp_dotnet_example",
+  "description": "An example gulpfile for Microsoft .NET projects",
+  "version": "0.0.1",
+  "author": "Rob Richardson (http://robrich.org/)",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
