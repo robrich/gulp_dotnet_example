@@ -71,7 +71,7 @@ gulp.task('default', ['clean', 'version', 'build', 'test', 'deploy'], noop);
 // The main 5 steps:
 gulp.task('clean', ['cleanVersioned', 'cleanUnversioned'], noop);
 gulp.task('version', ['getGitHash', 'getGitBranch', 'setVersion'], noop);
-gulp.task('build', ['clean','version', 'buildSolution', 'postBuildProjects'], noop);
+gulp.task('build', ['clean','version', 'runCssMin', 'runUglify', 'buildSolution', 'postBuildProjects'], noop);
 gulp.task('test', ['build', 'runJSHint', 'runJSTests', 'runCssLint', 'runNUnit'], noop);
 gulp.task('deploy', ['build','test', 'copyToDeployLocation'], noop);
 
