@@ -35,7 +35,7 @@ The build server should have [node](http://nodejs.org) installed and in `PATH`
 On each build:
 
 - `npm install`
-- `node_mobules\.bin\gulp.cmd` from the root of the project
+- `node_modules\.bin\gulp.cmd` from the root of the project
 
 If each command returns 0, the build succeeded, if any command returns non-zero, the build failed.
 Once the build is complete, you'll see the following:
@@ -45,7 +45,7 @@ Once the build is complete, you'll see the following:
 - /dist: these are deployment assets. Deploy these to necessary servers, and/or collect these in
   the build server as deployment assets.
 
-Note: the test project uses NUnit, and the build file assumes `nunit-console-x86.exe` is in `PATH`
+Note: the test project uses Git and NUnit assumes these are in `PATH`
 
 LICENSE
 -------

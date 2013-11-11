@@ -7,7 +7,8 @@ var gulp = require('gulp');
 var ignore = require('./lib/gulp-ignore');
 var verbose = require('./lib/gulp-verbose');
 var gulpSetVersion = require('./lib/gulp-setVersion');
-var gulpExec = require('gulp-exec');
+var es = require('event-stream');
+var path = require('path');
 
 
 var opts;
@@ -67,7 +68,7 @@ var getGitBranch = function (cb) {
 };
 
 var setVersion = function (callback) {
-	var mess = opts.verbose ? 'set version '+opts.gitHash+', '+opts.buildNumber+' in $file' : '';
+	var mess = opts.verbose ? 'set version '+opts.gitHash+', '+(opts.buildNumber || '')+' in $file' : '';
 	var stream = gulp.src("./**/*AssemblyInfo.cs")
 		.pipe(ignore("./dist/**"))
 		.pipe(verbose(mess))
@@ -77,12 +78,34 @@ var setVersion = function (callback) {
 };
 
 // Helpful for develpers who want to put it back, not directly referenced by the build
-var revertVersion = function (callback) {
+var revertVersion = function (cb) {
+	var files = [];
 	var stream = gulp.src("./**/*AssemblyInfo.cs",{read:false})
 		.pipe(ignore("./dist/**"))
-		.pipe(verbose('reverting $file'))
-		.pipe(gulpExec('git checkout "$file"'));
-	stream.once('end', callback);
+		.pipe(es.map(function (file, cb) {
+			files.push(path.resolve(file.path));
+			cb(null, file);
+		}));
+	stream.once('end', function () {
+		var cmd = 'git checkout "'+files.join('" "')+'"';
+		console.log('reverting *AssemblyInfo.cs: '+cmd);
+		exec(cmd, function (error, stdout, stderr) {
+			if (stderr) {
+				console.log(stderr);
+			}
+			if (stdout) {
+				stdout = stdout.trim(); // Trim trailing cr-lf
+			}
+			if (error) {
+				console.log('git checkout errored with exit code '+error.code);
+				return cb(error);
+			}
+			if (stdout) {
+				console.log(stdout);
+			}
+			cb(null);
+		});
+	});
 };
 
 module.exports = {

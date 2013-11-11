@@ -43,12 +43,20 @@ var parseSolutionPipeline = function (slnFile, callback) {
 				if (!fs.existsSync(proj.path)) {
 					return cb(null); // Project file is missing, drop project from the stream
 				}
-				parseSln.getFile(proj.path, function (err, data) {
+				fs.stat(proj.path, function (err, stats) {
 					if (err) {
-						return cb(err,null);
+						return cb(err);
 					}
-					parseSln.getProjectData(proj, data);
-					cb(null, proj);
+					if (stats.isDirectory()) {
+						return cb(null); // Project file is a directory, drop project from stream
+					}
+					parseSln.getFile(proj.path, function (err, data) {
+						if (err) {
+							return cb(err,null);
+						}
+						parseSln.getProjectData(proj, data);
+						cb(null, proj);
+					});
 				});
 			}))
 			.pipe(es.map(function (proj, cb) {

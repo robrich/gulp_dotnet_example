@@ -8,6 +8,7 @@ var uglify = require('gulp-uglify');
 var ignore = require('./lib/gulp-ignore');
 var verbose = require('./lib/gulp-verbose');
 var header = require('gulp-header');
+var chalk = require('chalk');
 var fs = require('fs');
 var path = require('path');
 var exec = require('child_process').exec;
@@ -23,30 +24,24 @@ var setOpts = function (o) {
 };
 
 
-var setHeaderText = function () {
-	opts.headerText = '/*! '+opts.copyrightHeader+'\r\n   Hash: '+opts.gitHash+'\r\n   Branch: '+opts.gitBranch+'\r\n   Build: '+(opts.buildNumber || '')+'\r\n   Build date: {{now}} */';
-};
-
 var runCssMin = function (cb) {
-	setHeaderText(); // after version.getGitHash()
 	var mess = opts.verbose ? 'minifying $file' : '';
 	var stream = gulp.src('./Web/**/*.css')
 		.pipe(ignore(['./**/m/**', './**/libs/**']))
 		.pipe(verbose(mess))
 		.pipe(minifyCSS({}))
-		.pipe(header(opts.headerText))
+		.pipe(header(opts.headerText, opts))
 		.pipe(gulp.dest('./Web/m/'+opts.gitHash+'/'));
 	stream.once('end', cb);
 };
 
 var runUglify = function (cb) {
-	setHeaderText(); // after version.getGitHash()
 	var mess = opts.verbose ? 'uglifying $file' : '';
 	var stream = gulp.src('./Web/**/*.js')
 		.pipe(ignore(['./**/m/**', './**/libs/**', './**/_references.js']))
 		.pipe(verbose(mess))
 		.pipe(uglify())
-		.pipe(header(opts.headerText))
+		.pipe(header(opts.headerText, opts))
 		.pipe(gulp.dest('./Web/m/'+opts.gitHash+'/'));
 	stream.once('end', cb);
 };
@@ -65,6 +60,7 @@ var buildSolution = function(cb){
 		];
 		var args = [
 			'/m',
+			'/nologo',
 			'/target:Clean,Rebuild',
 			'/property:Configuration='+opts.configuration,
 			'/verbosity:'+opts.msbuildVerbosity,
@@ -79,7 +75,7 @@ var buildSolution = function(cb){
 		}
 		var cmd = '"'+cmds.concat(args).join('" "')+'"';
 		if (opts.verbose) {
-			console.log("buildSolution: "+cmd);
+			console.log(chalk.green('buildSolution')+': '+cmd);
 		}
 		exec(cmd, function (error, stdout, stderr) {
 			if (stderr) {
@@ -92,7 +88,7 @@ var buildSolution = function(cb){
 				console.log(stdout);
 			}
 			if (error) {
-				console.log('msbuild failed, exit code '+error.code);
+				console.log(chalk.red('solution build failed')+', exit code '+error.code);
 			}
 			cb(error);
 		});
@@ -100,7 +96,7 @@ var buildSolution = function(cb){
 };
 
 // dest is folder
-var packageProject = function (projPath, projName, destPackage, cb) {
+var packageProject = function (project, cb) {
 	fs.mkdir('log', function (err) {
 		if (err && err.code === 'EEXIST') {
 			err = null; // Ignore 'directory already exists' error
@@ -108,6 +104,10 @@ var packageProject = function (projPath, projName, destPackage, cb) {
 		if (err) {
 			return cb(err);
 		}
+
+		var projPath = project.path;
+		var projName = project.name;
+		var destPackage = path.join('./dist', project.projectType, project.name+'-pkg', project.name+'.zip');
 
 		// TODO: delete old /obj/*.config
 
@@ -119,6 +119,7 @@ var packageProject = function (projPath, projName, destPackage, cb) {
 		];
 		var args = [
 			'/m',
+			'/nologo',
 			'/target:TransformWebConfig;Package',
 			'/p:PackageLocation='+destBackslash,
 			'/property:Configuration='+opts.configuration,
@@ -134,7 +135,7 @@ var packageProject = function (projPath, projName, destPackage, cb) {
 		}
 		var cmd = '"'+cmds.concat(args).join('" "')+'"';
 		if (opts.verbose) {
-			console.log('packageProject: projName: '+projName+', projPath:'+projPath+', destPackage: '+destPackage);
+			console.log(chalk.green('packageProject')+': projName: '+chalk.cyan(projName)+', projPath:'+projPath+', destPackage: '+destPackage);
 			console.log(' cmd: '+cmd);
 		}
 		exec(cmd, function (error, stdout, stderr) {
@@ -148,7 +149,7 @@ var packageProject = function (projPath, projName, destPackage, cb) {
 				console.log(stdout);
 			}
 			if (error) {
-				console.log('msbuild failed, exit code '+error.code);
+				console.log(chalk.red('packageProject:'+projName+' failed')+', exit code '+error.code);
 				return cb(error);
 			}
 			if (!fs.existsSync(destPackage)) {
@@ -159,7 +160,7 @@ var packageProject = function (projPath, projName, destPackage, cb) {
 	});
 };
 
-var copyProject = function (projPath, projName, dest, cb) {
+var copyProject = function (project, cb) {
 	fs.mkdir('log', function (err) {
 		if (err && err.code === 'EEXIST') {
 			err = null; // Ignore 'directory already exists' error
@@ -167,6 +168,11 @@ var copyProject = function (projPath, projName, dest, cb) {
 		if (err) {
 			return cb(err);
 		}
+
+		var projPath = project.path;
+		var projName = project.name;
+		var dest = path.join('./dist', project.projectType, project.name);
+
 		mkdirp(dest, function (err) {
 			if (err && err.code === 'EEXIST') {
 				err = null; // Ignore 'directory already exists' error
@@ -185,6 +191,7 @@ var copyProject = function (projPath, projName, dest, cb) {
 			];
 			var args = [
 				'/m',
+				'/nologo',
 				'/target:PipelinePreDeployCopyAllFilesToOneFolder',
 				'/p:_PackageTempDir='+destBackslash,
 				'/property:Configuration='+opts.configuration,
@@ -200,7 +207,7 @@ var copyProject = function (projPath, projName, dest, cb) {
 			}
 			var cmd = '"'+cmds.concat(args).join('" "')+'"';
 			if (opts.verbose) {
-				console.log('copyProject: projName: '+projName+', projPath:'+projPath+', dest: '+dest);
+				console.log(chalk.green('copyProject')+': projName: '+chalk.cyan(projName)+', projPath:'+projPath+', dest: '+dest);
 				console.log(' cmd: '+cmd);
 			}
 			exec(cmd, function (error, stdout, stderr) {
@@ -214,7 +221,7 @@ var copyProject = function (projPath, projName, dest, cb) {
 					console.log(stdout);
 				}
 				if (error) {
-					console.log('msbuild failed, exit code '+error.code);
+					console.log(chalk.red('copyProject:'+projName+' failed')+', exit code '+error.code);
 					return cb(error);
 				}
 
@@ -239,49 +246,21 @@ var copyProject = function (projPath, projName, dest, cb) {
 };
 
 var copyProjectFolder = function (project, cb) {
-	mkdirp(path.join('./dist', project.projectType, project.name), function (err) {
+	var copyDest = path.join('./dist', project.projectType, project.name);
+	mkdirp(copyDest, function (err) {
 		if (err) {
 			return cb(err);
 		}
-		ncp(path.join(project.base,opts.outputPath), path.join('./dist', project.projectType, project.name), cb);
+		if (opts.verbose) {
+			console.log(chalk.green('copyProjectFolder')+': projName: '+chalk.cyan(project.name)+', dest: '+copyDest);
+		}
+		ncp(path.join(project.base,opts.outputPath), copyDest, cb);
 	});
-};
-
-var postBuildProject = function (project, cb) {
-	if (!project) {
-		return cb(new Error("project is blank"));
-	}
-	switch (project.projectType) {
-		case 'web':
-			// FRAGILE: If two web projects do this simultaneously bad things may happen
-			async.series([
-				function (cbb) {
-					packageProject(project.path, project.name, path.join('./dist', project.projectType, project.name+'.zip'), cbb);
-				},
-				function (cba) {
-					copyProject(project.path, project.name, path.join('./dist', project.projectType, project.name), cba);
-				}
-			], cb);
-			break;
-		case 'app':
-			copyProjectFolder(project, cb);
-			break;
-		case 'test':
-			copyProjectFolder(project, cb);
-			break;
-		case 'db':
-			copyProjectFolder(project, cb);
-			break;
-		case 'lib':
-			cb(null); // Nothing to do
-			break;
-		default:
-			return cb(new Error('Unknown projectType: '+project.projectType+', '+JSON.stringify(project)));
-	}
 };
 
 var postBuildProjects = function (cb) {
 	parseSlnStream(opts.solutionFile, function (err, projects) {
+		var i = 0, parallel = [], series = [], packageProjectClosure, copyProjectClosure, copyProjectFolderClosure, project;
 		if (err) {
 			return cb(err);
 		}
@@ -289,14 +268,63 @@ var postBuildProjects = function (cb) {
 			return cb(null); // successfully did nothing
 		}
 		if (opts.verbose) {
-			var i, project;
 			console.log(' Identified projects:');
 			for (i = 0; i < projects.length; i++) {
 				project = projects[i];
 				console.log('  project: '+project.name+', type: '+project.projectType+', path: '+project.path);
 			}
+			console.log('');
 		}
-		async.each(projects, postBuildProject, cb);
+
+		// closures to capture the project from the loop
+		packageProjectClosure = function (p) {
+			return function (cbc) {
+				packageProject(p, cbc);
+			};
+		};
+		copyProjectClosure = function (p) {
+			return function (cbc) {
+				copyProject(p, cbc);
+			};
+		};
+		copyProjectFolderClosure = function (p) {
+			return function (cbc) {
+				copyProjectFolder(p, cbc);
+			};
+		};
+
+		// schedule tasks for each project based on project type
+		for (i = 0; i < projects.length; i++) {
+			project = projects[i];
+			switch (project.projectType) {
+				case 'web':
+					series.push(copyProjectClosure(project));
+					series.push(packageProjectClosure(project));
+					break;
+				case 'app':
+					parallel.push(copyProjectFolderClosure(project));
+					break;
+				case 'test':
+					parallel.push(copyProjectFolderClosure(project));
+					break;
+				case 'db':
+					parallel.push(copyProjectFolderClosure(project));
+					break;
+				case 'lib':
+					// Nothing to do
+					break;
+				default:
+					return cb(new Error('Unknown projectType: '+project.projectType+', '+JSON.stringify(project)));
+			}
+		}
+
+		// add series tasks to the parallel loop
+		parallel.push(function (cba) {
+			async.series(series, cba);
+		});
+
+		// run the tasks
+		async.parallel(parallel, cb);
 	});
 };
 
@@ -307,6 +335,5 @@ module.exports = {
 	buildSolution: buildSolution,
 	copyProject: copyProject,
 	packageProject: packageProject,
-	postBuildProject: postBuildProject,
 	postBuildProjects: postBuildProjects
 };

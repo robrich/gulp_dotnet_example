@@ -2,6 +2,7 @@
 
 "use strict";
 
+var mkdirp = require('mkdirp');
 var ncp = require('ncp');
 
 
@@ -12,7 +13,15 @@ var setOpts = function (o) {
 };
 
 var copyToDeployLocation = function (cb) {
-	ncp('./dist/Web/Web', opts.deployLocation, cb);
+	if (opts.doDeploy) {
+		console.log('deploying web assets to '+opts.deployLocation);
+		mkdirp(opts.deployLocation, function (err) {
+			if (err) {
+				return cb(err);
+			}
+			ncp('./dist/Web/Web', opts.deployLocation, cb);
+		});
+	}
 };
 
 module.exports = {

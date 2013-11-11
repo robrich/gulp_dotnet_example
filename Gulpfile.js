@@ -2,6 +2,7 @@
 
 "use strict";
 
+var path = require('path');
 var gulp = require('gulp');
 
 var clean = require('./gulpLib/clean');
@@ -14,19 +15,24 @@ var deploy = require('./gulpLib/deploy');
 var opts = {
 	solutionName: 'GulpTarget',
 	platform: 'Any CPU',
-	frameworkVersion: '4.0.30319',
-	frameworkName: 'net-4.0',
+	frameworkVersion: '4.0.30319', // MSBuild path
+	frameworkName: 'net-4.5', // for NUnit
 	msbuildVerbosity: 'Minimal',
 	configuration: 'Release',
 	debug: false,
 	buildNumber: process.env.BUILD_NUMBER,
 	copyrightHeader: 'Copyright {{year}} MyCompany, All Rights Reserved',
-	deployLocation: 'D:\\JenkinsDrops\\WSB_All',
 	verbose: true
 };
 opts.solutionFile = opts.solutionName+'.sln';
+opts.headerText = '/*! {{copyrightHeader}}\r\n   Hash: {{gitHash}}\r\n   Branch: {{gitBranch}}\r\n   Build: {{buildNumber}}\r\n   Build date: {{now}} */';
 opts.debugConditional = opts.debug ? 'DEBUG;TRACE' : '';
 opts.outputPath = opts.debug ? 'bin/Debug' : 'bin/Release';
+opts.doDeploy = !!opts.buildNumber; // FRAGILE: ASSUME: If we have a build number we're on the CI box
+gulp.task('setDeployLocation', ['version'], function (cb) {
+	opts.deployLocation = path.resolve('D:\\JenkinsDrops\\'+opts.getGitBranch+'\\'+opts.getGitHash+'_'+opts.buildNumber);
+	cb(null);
+});
 
 
 opts.jshint = {
@@ -54,11 +60,9 @@ opts.jshint = {
 };
 
 gulp.on('err', function (e) {
-	if (e.err) {
-		console.log();
-		console.log('Gulp build failed:');
-		process.exit(1);
-	}
+	console.log();
+	console.log('Gulp build failed: '+e.message);
+	process.exit(1);
 });
 
 
@@ -82,8 +86,8 @@ gulp.task('cleanVersioned', ['setOpts'], clean.cleanVersioned);
 
 // version
 
-gulp.task('getGitHash', ['setOpts'], version.getGitHash);
-gulp.task('getGitBranch', ['setOpts'], version.getGitBranch);
+gulp.task('getGitHash', ['setOpts', 'cleanVersioned'], version.getGitHash);
+gulp.task('getGitBranch', ['setOpts', 'cleanVersioned'], version.getGitBranch);
 gulp.task('setVersion', ['clean', 'getGitHash','getGitBranch'], version.setVersion);
 // Helpful for developers who want to put it back, not directly referenced by the build
 // `gulp revertVersion` from a cmd
@@ -105,7 +109,7 @@ gulp.task('runNUnit', ['build', 'setOpts'], test.runNUnit);
 
 // deploy
 
-gulp.task('copyToDeployLocation', ['setOpts', 'build', 'test'], deploy.copyToDeployLocation);
+gulp.task('copyToDeployLocation', ['setOpts', 'build', 'test', 'setDeployLocation'], deploy.copyToDeployLocation);
 
 // generic
 

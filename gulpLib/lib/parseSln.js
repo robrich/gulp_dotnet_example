@@ -94,6 +94,9 @@ var isTestProject = function (fileData) {
 		if (fileData.indexOf('Microsoft.VisualStudio.TestTools') > -1) {
 			result = true;
 		}
+		if (fileData.indexOf('Microsoft.VisualStudio.QualityTools') > -1) {
+			result = true;
+		}
 		// TODO: expand this list as we get more testing frameworks
 	}
 
