@@ -5,7 +5,7 @@
 var gulp = require('gulp');
 var jshint = require('gulp-jshint');
 //var csslint = require('gulp-csslint');
-var ignore = require('./lib/gulp-ignore');
+var ignore = require('gulp-ignore');
 var async = require('async');
 var path = require('path');
 var fs = require('fs');
@@ -25,8 +25,8 @@ var runJSHint = function (cb) {
 	var jshintSuccess = true; // nothing disputed it yet
 	var mess = opts.verbose ? 'linting $file' : '';
 	var stream = gulp.src('./**/*.js')
-		.pipe(ignore(['./**/*.min.js','./dist/**','./**/libs/**']))
-		.pipe(ignore(['./node_modules/**','./packages/**']))
+		.pipe(ignore({pattern:['./**/*.min.js','./dist/**','./**/libs/**']}))
+		.pipe(ignore({pattern:['./node_modules/**','./packages/**']}))
 		.pipe(verbose(mess))
 		.pipe(jshint(opts.jshint))
 		.pipe(jshint.reporterSimple())

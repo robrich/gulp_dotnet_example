@@ -17,6 +17,7 @@
     "event-stream": "*",
     "gulp": "*",
     "gulp-exec": "*",
+    "gulp-ignore": "*",
     "gulp-rimraf": "*",
     "gulp-jshint": "*",
     "gulp-uglify": "*",

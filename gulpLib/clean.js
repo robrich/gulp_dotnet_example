@@ -6,7 +6,7 @@ var async = require('async');
 var rimraf = require('rimraf');
 var gulp = require('gulp');
 var gulpRimraf = require('gulp-rimraf');
-var ignore = require('./lib/gulp-ignore');
+var ignore = require('gulp-ignore');
 var verbose = require('./lib/gulp-verbose');
 var exec = require('child_process').exec;
 
@@ -28,7 +28,7 @@ var cleanUnversioned = function (cb) {
 		function (cbc) {
 			var mess = opts.verbose ? 'deleting $file' : '';
 			var stream = gulp.src('{**/bin,**/obj,**/Debug,**/Release,./Web/m}',{read:false})
-				.pipe(ignore(['node_modules/**','packages/**']))
+				.pipe(ignore({pattern:['node_modules/**','packages/**']}))
 				.pipe(verbose(mess))
 				.pipe(gulpRimraf());
 			stream.once('end', cbc);

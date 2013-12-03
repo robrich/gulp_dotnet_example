@@ -5,7 +5,7 @@
 var gulp = require('gulp');
 var minifyCSS = require('gulp-minify-css');
 var uglify = require('gulp-uglify');
-var ignore = require('./lib/gulp-ignore');
+var ignore = require('gulp-ignore');
 var verbose = require('./lib/gulp-verbose');
 var header = require('gulp-header');
 var chalk = require('chalk');
@@ -27,7 +27,7 @@ var setOpts = function (o) {
 var runCssMin = function (cb) {
 	var mess = opts.verbose ? 'minifying $file' : '';
 	var stream = gulp.src('./Web/**/*.css')
-		.pipe(ignore(['./**/m/**', './**/libs/**']))
+		.pipe(ignore({pattern:['./**/m/**', './**/libs/**']}))
 		.pipe(verbose(mess))
 		.pipe(minifyCSS({}))
 		.pipe(header(opts.headerText, opts))
@@ -38,7 +38,7 @@ var runCssMin = function (cb) {
 var runUglify = function (cb) {
 	var mess = opts.verbose ? 'uglifying $file' : '';
 	var stream = gulp.src('./Web/**/*.js')
-		.pipe(ignore(['./**/m/**', './**/libs/**', './**/_references.js']))
+		.pipe(ignore({pattern:['./**/m/**', './**/libs/**', './**/_references.js']}))
 		.pipe(verbose(mess))
 		.pipe(uglify())
 		.pipe(header(opts.headerText, opts))

@@ -4,7 +4,7 @@
 
 var exec = require('child_process').exec;
 var gulp = require('gulp');
-var ignore = require('./lib/gulp-ignore');
+var ignore = require('gulp-ignore');
 var verbose = require('./lib/gulp-verbose');
 var gulpSetVersion = require('./lib/gulp-setVersion');
 var es = require('event-stream');
@@ -70,7 +70,7 @@ var getGitBranch = function (cb) {
 var setVersion = function (callback) {
 	var mess = opts.verbose ? 'set version '+opts.gitHash+', '+(opts.buildNumber || '')+' in $file' : '';
 	var stream = gulp.src("./**/*AssemblyInfo.cs")
-		.pipe(ignore("./dist/**"))
+		.pipe(ignore({pattern:"./dist/**"}))
 		.pipe(verbose(mess))
 		.pipe(gulpSetVersion(opts.gitHash, opts.buildNumber))
 		.pipe(gulp.dest("./"));
@@ -81,7 +81,7 @@ var setVersion = function (callback) {
 var revertVersion = function (cb) {
 	var files = [];
 	var stream = gulp.src("./**/*AssemblyInfo.cs",{read:false})
-		.pipe(ignore("./dist/**"))
+		.pipe(ignore({pattern:"./dist/**"}))
 		.pipe(es.map(function (file, cb) {
 			files.push(path.resolve(file.path));
 			cb(null, file);
